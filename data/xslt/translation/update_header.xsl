@@ -12,6 +12,8 @@
   <xsl:param name="filename_text"/>
   <xsl:param name="TM_text"/>
   <xsl:param name="HGV_text"/>
+  <xsl:param name="CITE_text"/>
+  <xsl:param name="CTS_text"/>
   
   <!-- params for reprint -->
   <!-- <xsl:param name="reprint_from_text"/>
@@ -65,6 +67,22 @@
     <xsl:copy>
       <xsl:copy-of select="@*"/>
       <xsl:value-of select="$HGV_text"/>
+    </xsl:copy>
+  </xsl:template>
+  
+  <!-- Update <idno type='urn:cts'> -->
+  <xsl:template match="tei:idno[@type='urn:cts']">
+    <xsl:copy>
+      <xsl:copy-of select="@*"/>
+      <xsl:value-of select="$CTS_text"/>
+    </xsl:copy>
+  </xsl:template>
+  
+  <!-- Update <idno type='urn:cts'> -->
+  <xsl:template match="tei:idno[@type='urn:cite']">
+    <xsl:copy>
+      <xsl:copy-of select="@*"/>
+      <xsl:value-of select="$CITE_text"/>
     </xsl:copy>
   </xsl:template>
   

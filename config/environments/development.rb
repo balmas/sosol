@@ -46,4 +46,6 @@ config.action_mailer.smtp_settings =
 # config/environments/development_secret.rb should set
 # RPX_API_KEY and RPX_REALM (site name) for RPX,
 # and possibly other unversioned secrets for development
+XSUGAR_STANDALONE_URL="http://localhost:9999/"
+XSUGAR_STANDALONE_USE_PROXY="true"
 require File.join(File.dirname(__FILE__), 'development_secret')

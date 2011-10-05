@@ -52,8 +52,8 @@ class Publication < ActiveRecord::Base
     Rails.logger.info('------------------------------------')
 
     #merge xml
-    meta = REXML::Document.new tmp[:HGVMetaIdentifier]
-    text = REXML::Document.new tmp[:DDBIdentifier]
+    meta = REXML::Document.new tmp[:EpiMetaCITEIdentifier]
+    text = REXML::Document.new tmp[:EpiCTSIdentifier]
 
     Rails.logger.info('---------------DDB xml document---------------------')
 
@@ -109,7 +109,7 @@ class Publication < ActiveRecord::Base
     end
     self.title = original_title
 
-    [DDBIdentifier, HGVMetaIdentifier, HGVTransIdentifier].each do |identifier_class|
+    [EpiCTSIdentifier,EpiTransCTSIdentifier,EpiMetaCITEIdentifier,DDBIdentifier, HGVMetaIdentifier, HGVTransIdentifier].each do |identifier_class|
       if identifiers.has_key?(identifier_class::IDENTIFIER_NAMESPACE)
         identifiers[identifier_class::IDENTIFIER_NAMESPACE].each do |identifier_string|
           temp_id = identifier_class.new(:name => identifier_string)
@@ -325,18 +325,20 @@ class Publication < ActiveRecord::Base
     new_publication = Publication.new(:owner => creator, :creator => creator)
     
     # fetch a title without creating from template
-    new_publication.title = DDBIdentifier.new(:name => DDBIdentifier.next_temporary_identifier).titleize
+    new_publication.title = EpiCTSIdentifier.new(:name => EpiCTSIdentifier.next_temporary_identifier).titleize
     
     new_publication.status = "new" #TODO add new flag else where or flesh out new status#"new"
-    
     new_publication.save!
     
     # branch from master so we aren't just creating an empty branch
     new_publication.branch_from_master
             
     #create the required meta data and transcriptions
-    new_ddb = DDBIdentifier.new_from_template(new_publication)      
-    new_hgv_meta = HGVMetaIdentifier.new_from_template(new_publication)
+    new_cts = EpiCTSIdentifier.new_from_template(new_publication)
+    new_citemeta = EpiMetaCITEIdentifier.new_from_template(new_publication)      
+      
+    #new_ddb = DDBIdentifier.new_from_template(new_publication)      
+    #new_hgv_meta = HGVMetaIdentifier.new_from_template(new_publication)
             
     # go ahead and create the third so we can get rid of the create button
     #new_hgv_trans = HGVTransIdentifier.new_from_template(new_publication)    

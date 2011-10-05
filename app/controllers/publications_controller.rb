@@ -12,26 +12,44 @@ class PublicationsController < ApplicationController
     
     #WARNING hardcoded identifier depenency hack  
     #enforce creation order
-    has_meta = false
-    has_text = false
+    has_hgvmeta = false
+    has_citemeta = false
+    has_ddbtext = false
+    has_ctstext = false
     @publication.identifiers.each do |i|
       if i.class.to_s == "HGVMetaIdentifier"
-        has_meta = true
+        has_hgvmeta = true
+      end
+      if i.class.to_s == "EpiMetaCITEIdentifier"
+        has_citemeta = true
       end
       if i.class.to_s == "DDBIdentifier"
-       has_text = true
+       has_ddbtext = true
+      end
+      if i.class.to_s == "EpiCTSIdentifier"
+       has_ctstext = true
       end
     end
-    if !has_text
+    if !has_ddbtext
       #cant create trans
-      @creatable_identifiers.delete("HGVTransIdentifier")
+      @creatable_identifiers.delete("HGVTransIdentifier")      
     end
-    if !has_meta
+    if !has_ctstext
+      @creatable_identifiers.delete("EpiTransCTSIdentifier")
+    end
+    if !has_hgvmeta
       #cant create text
       @creatable_identifiers.delete("DDBIdentifier")
       #cant create trans
-      @creatable_identifiers.delete("HGVTransIdentifier")     
+      @creatable_identifiers.delete("HGVTransIdentifier")
     end
+    if !has_citemeta
+       @creatable_identifiers.delete("EpiCTSIdentifier")
+       @creatable_identifiers.delete("EpiTransCTSIdentifier")  
+    else
+      @creatable_identifiers.delete("HGVMetaIdentifier")      
+    end
+    
     #TODO - is Biblio needed?
     @creatable_identifiers.delete("HGVBiblioIdentifier")
     

@@ -1,0 +1,252 @@
+# attributes for elements
+#
+# :xpath (mandatory)
+# :multiple -> true | false (optional, defaults to false)
+# :optional -> true | false (optional, defaults to true)
+# :default -> default value as string, multiple entries do not support default values (optional)
+# :pattern -> ruby style regular expression /\A0(\.\d)?|1\Z/ (optional)
+# :children -> recursive element structure
+#
+# attributes for attributes
+#
+# :name (mandatory) 
+# :optional (same as above)
+# :default (same as above)
+# :pattern (same as above)
+
+:epi:
+  :metadata:
+    :titleStmt:
+      :xpath: /TEI/teiHeader/fileDesc/titleStmt/title
+    :publicationTitle:
+      :xpath: /TEI/text/body/div[@type='bibliography'][@subtype='principalEdition']/listBibl/bibl[@type='publication'][@subtype='principal']/title[@level='s'][@type='abbreviated']
+    :publicationExtra:
+      :xpath: /TEI/text/body/div[@type='bibliography'][@subtype='principalEdition']/listBibl/bibl[@type='publication'][@subtype='principal']/biblScope
+      :multiple: true
+      :attributes:
+        :type:
+          :name: type
+          :pattern: /\Avolume|fascicle|side|numbers|pages|lines|fragments|folio|inventory|number|columns|generic|parts\Z/
+    :collectionPlaceName:
+      :xpath: /TEI/teiHeader/fileDesc/sourceDesc/msDesc/msIdentifier/placeName/settlement
+    :collection:
+      :xpath: /TEI/teiHeader/fileDesc/sourceDesc/msDesc/msIdentifier/collection
+    :collectionInventoryNumber:
+      :xpath: /TEI/teiHeader/fileDesc/sourceDesc/msDesc/msIdentifier/idno[@type='invNo']
+    :collectionTemporaryNotes:
+      :xpath: /TEI/teiHeader/fileDesc/sourceDesc/msDesc/msIdentifier/altIdentifier[@type='temporary']/note
+    :collectionTemporaryInventoryNumber:
+      :xpath: /TEI/teiHeader/fileDesc/sourceDesc/msDesc/msIdentifier/altIdentifier[@type='temporary']/idno[@type='invNo']
+    :tmNo:
+      :xpath: /TEI/teiHeader/fileDesc/publicationStmt/idno[@type='TM']
+      :pattern: /\A\d+\Z/
+    :illustrations:
+      :xpath: /TEI/text/body/div[@type='bibliography'][@subtype='illustrations']/p/bibl[@type='illustration']
+      :multiple: true
+    :figures:
+      :xpath: /TEI/text/body/div[@type='figure']/p/figure
+      :children:
+        :graphic:
+          :xpath: graphic
+          :attributes:
+            :url:
+              :name: url
+      :multiple: true
+    :contentText:
+      :xpath: /TEI/teiHeader/profileDesc/textClass/keywords[@scheme='epicite']/term
+      :multiple: true
+    :otherPublications:
+      :xpath: /TEI/text/body/div[@type='bibliography'][@subtype='otherPublications']/listBibl/bibl[@type='publication'][@subtype='other']
+      :multiple: true
+    :translationsDe: #tweaked but may need more added to form - may have multiples
+      :xpath: /TEI/text/body/div[@type='bibliography'][@subtype='translations']/listBibl[@xml:lang='de']/bibl[@type='translations']
+      :multiple: true
+    :translationsEn:
+      :xpath: /TEI/text/body/div[@type='bibliography'][@subtype='translations']/listBibl[@xml:lang='en']/bibl[@type='translations']
+      :multiple: true
+    :translationsIt:
+      :xpath: /TEI/text/body/div[@type='bibliography'][@subtype='translations']/listBibl[@xml:lang='it']/bibl[@type='translations']
+      :multiple: true
+    :translationsEs:
+      :xpath: /TEI/text/body/div[@type='bibliography'][@subtype='translations']/listBibl[@xml:lang='es']/bibl[@type='translations']
+      :multiple: true
+    :translationsLa:
+      :xpath: /TEI/text/body/div[@type='bibliography'][@subtype='translations']/listBibl[@xml:lang='la']/bibl[@type='translations']
+      :multiple: true
+    :translationsFr:
+      :xpath: /TEI/text/body/div[@type='bibliography'][@subtype='translations']/listBibl[@xml:lang='fr']/bibl[@type='translations']
+      :multiple: true
+    :bl:
+      :xpath: /TEI/text/body/div[@type='bibliography'][@subtype='corrections']/listBibl/bibl[@type='BL']
+      :multiple: true
+      :children:
+        :volume:
+          :xpath: biblScope[@type='volume']
+          :optional: false
+        :page:
+          :xpath: biblScope[@type='pages']
+          :optional: false
+    :notes:
+      :xpath: /TEI/text/body/div[@type='commentary'][@subtype='general']/p
+    :material:
+      :xpath: /TEI/teiHeader/fileDesc/sourceDesc/msDesc/physDesc/objectDesc/supportDesc/support/material
+    :plannedForFuturePrintRelease: #does not currently exist in data
+      :xpath: /TEI/teiHeader/fileDesc/publicationStmt/idno[@type='futurePrintRelease']
+      :pattern: /\A.+?;.+?;.*\Z/
+    :mentionedDate:
+      :xpath: /TEI/text/body/div[@type='commentary'][@subtype='mentionedDates']/list/item
+      :multiple: true
+      :children:
+        :ref:
+          :xpath: ref
+        :comment:
+          :xpath: note[@type='comment']
+        :date:
+          :xpath: date[@type='mentioned']
+          :attributes:
+            :when:
+              :name: when
+            :notBefore:
+              :name: notBefore
+            :notAfter:
+              :name: notAfter
+            :certainty:
+              :name: cert
+          :children:
+            :certainty:
+              :xpath: certainty[@locus='value']
+              :multiple: true
+              :attributes:
+                :match:
+                  :name: match
+                :relation:
+                  :name: given
+                  :pattern: /\A#dateAlternative[XYZ]\Z/
+                :degree:
+                  :name: degree
+                  :optional: false
+                  :pattern: /\A0(\.\d)?|1\Z/
+        :annotation:
+          :xpath: note[@type='annotation']
+    :provenance:
+      :xpath: /TEI/teiHeader/fileDesc/sourceDesc/msDesc/history/provenance/listEvent/event
+      :multiple: true
+      :attributes:
+        :type:
+          :name: type
+        :subtype:
+          :name: subtype
+        :id:
+          :name: xml:id
+        :date:
+          :name: when
+      :children:
+        :paragraph:
+          :xpath: p
+          :children:
+            :place:
+              :xpath: placeName
+              :multiple: true
+              :attributes:
+                :id:
+                  :name: xml:id
+                :exclude:
+                  :name: exclude
+              :children:
+                :geo:
+                  :xpath: placeName
+                  :multiple: true
+                  :attributes:
+                    :type:
+                      :name: type
+                    :subtype:
+                      :name: subtype
+                    :certainty:
+                      :name: cert
+                    :reference:
+                      :name: ref
+                  :preFlag: offset # CL: CROMULENT GEO HACK
+    :origPlace:
+      :xpath: /TEI/teiHeader/fileDesc/sourceDesc/msDesc/history/origin/origPlace
+      :multiple: true
+      :pattern: /(Unbekannt|Fundort)/
+      :attributes:
+        :type:
+          :name: type
+        :correspondency:
+          :name: corresp
+      :children:
+        :place:
+          :xpath: placeName
+          :multiple: true
+          :attributes:
+            :id:
+              :name: xml:id
+            :exclude:
+              :name: exclude
+          :children:
+            :geo:
+              :xpath: placeName
+              :multiple: true
+              :attributes:
+                :type:
+                  :name: type
+                :subtype:
+                  :name: subtype
+                :certainty:
+                  :name: cert
+                :reference:
+                  :name: ref
+              :preFlag: offset # CL: CROMULENT GEO HACK
+
+    :textDate:
+      :xpath: /TEI/teiHeader/fileDesc/sourceDesc/msDesc/history/origin/origDate
+      :multiple: true
+      :pattern: /\A-?\d\d\d\d(-\d\d(-\d\d)?)?\Z/
+      :attributes:
+        :id:
+          :name: xml:id
+          :pattern: /\AdateAlternative[XYZ]\Z/
+        :when:
+          :name: when
+          :pattern: /\A-?\d\d\d\d(-\d\d(-\d\d)?)?\Z/
+        :notBefore:
+          :name: notBefore
+          :pattern: /\A-?\d\d\d\d(-\d\d(-\d\d)?)?\Z/
+        :notAfter:
+          :name: notAfter
+          :pattern: /\A-?\d\d\d\d(-\d\d(-\d\d)?)?\Z/
+        :certainty:
+          :name: cert
+          :pattern: /\A(high|medium|low)\Z/
+        :precision:
+          :name: precision
+          :pattern: /\A(high|medium|low)\Z/
+      :children:
+        :offset:
+          :xpath: offset
+          :multiple: true
+          :attributes:
+            :position:
+              :name: n
+              :pattern: /\A[12]\Z/
+            :type:
+              :name: type
+              :pattern: /\A(befor|after)\Z/
+        :precision:
+          :xpath: precision
+          :multiple: true
+          :attributes:
+            :match:
+              :name: match
+              :pattern: /\A..\/@(when|notBefore|notAfter))\Z/
+            :degree:
+              :name: degree
+              :pattern: /\A0\.[15]\Z/ # 0.3 for low is not accepted
+        :certainty:
+          :xpath: certainty[@locus='value']
+          :multiple: true
+          :attributes:
+            :match:
+              :name: match
+              :pattern: /\A..\/(((day|month|year)-from-date\()?@(when|notBefore|notAfter)(\)?)|offset\[@type='(after|before)'\])\Z/

@@ -1,6 +1,6 @@
 class Identifier < ActiveRecord::Base
   #TODO - is Biblio needed?
-  IDENTIFIER_SUBCLASSES = %w{ DDBIdentifier HGVMetaIdentifier HGVTransIdentifier HGVBiblioIdentifier }
+  IDENTIFIER_SUBCLASSES = %w{ EpiCTSIdentifier EpiTransCTSIdentifier EpiMetaCITEIdentifier DDBIdentifier HGVMetaIdentifier HGVTransIdentifier HGVBiblioIdentifier }
   
   FRIENDLY_NAME = "Base Identifier"
   
@@ -107,7 +107,9 @@ class Identifier < ActiveRecord::Base
   
   def titleize
     title = nil
-    if self.class == HGVMetaIdentifier || self.class == HGVBiblioIdentifier
+    if self.class == EpiCTSIdentifier && (self.name =~ /#{self.class::TEMPORARY_COLLECTION}/)
+        self.name
+    elsif self.class == HGVMetaIdentifier || self.class == HGVBiblioIdentifier
       title = NumbersRDF::NumbersHelper::identifier_to_title(self.name)
     elsif self.class == HGVTransIdentifier
       title = NumbersRDF::NumbersHelper::identifier_to_title(
@@ -123,7 +125,9 @@ class Identifier < ActiveRecord::Base
           self.class.collection_names_hash[collection_name]
         
         # strip leading zeros
-        document_number.sub!(/^0*/,'')
+        unless document_number.nil?
+          document_number.sub!(/^0*/,'')
+        end
 
         if collection_name.nil?
           title = self.name.split('/').last
@@ -174,7 +178,7 @@ class Identifier < ActiveRecord::Base
   def file_template
     template_path = File.join(RAILS_ROOT, ['data','templates'],
                               "#{self.class.to_s.underscore}.xml.erb")
-    
+                              
     template = ERB.new(File.new(template_path).read, nil, '-')
     
     id = self.id_attribute
@@ -310,7 +314,7 @@ class Identifier < ActiveRecord::Base
       JRubyXML.stream_from_string(input_content.nil? ? self.xml_content : input_content),
       JRubyXML.stream_from_file(File.join(RAILS_ROOT,
         %w{data xslt common add_change.xsl})),
-      :who => ActionController::Integration::Session.new.url_for(:host => NumbersRDF::NAMESPACE_IDENTIFIER, :controller => 'user', :action => 'show', :user_name => user_info.name, :only_path => false),
+      :who => ActionController::Integration::Session.new.url_for(:host => User::NAMESPACE_IDENTIFIER, :controller => 'user', :action => 'show', :user_name => user_info.name, :only_path => false),
       :comment => text
     )
     

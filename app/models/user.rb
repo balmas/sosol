@@ -1,4 +1,6 @@
 class User < ActiveRecord::Base
+  
+  NAMESPACE_IDENTIFIER = "perseus.org"
   validates_uniqueness_of :name, :case_sensitive => false
   
   has_many :user_identifiers, :dependent => :destroy
