@@ -107,7 +107,7 @@ class Identifier < ActiveRecord::Base
   
   def titleize
     title = nil
-    if self.class == EpiCTSIdentifier && (self.name =~ /#{self.class::TEMPORARY_COLLECTION}/)
+    if (self.class == EpiCTSIdentifier || self.class == EpiTransCTSIdentifier) && (self.name =~ /#{self.class::TEMPORARY_COLLECTION}/)
         self.name
     elsif self.class == HGVMetaIdentifier || self.class == HGVBiblioIdentifier
       title = NumbersRDF::NumbersHelper::identifier_to_title(self.name)
@@ -139,6 +139,8 @@ class Identifier < ActiveRecord::Base
          if self.respond_to?("is_reprinted?") && self.is_reprinted?
            title += " (reprinted)"
          end
+      elsif (self.class == EpiCTSIdentifier) || (self.class == EpiTransCTSIdentifier)
+        title = self.name
       else # HGV with no name
         title = "HGV " + self.name.split('/').last.tr(';',' ')
       end

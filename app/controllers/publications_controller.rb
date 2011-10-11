@@ -46,6 +46,8 @@ class PublicationsController < ApplicationController
     if !has_citemeta
        @creatable_identifiers.delete("EpiCTSIdentifier")
        @creatable_identifiers.delete("EpiTransCTSIdentifier")  
+       @creatable_identifiers.delete("HGVMetaIdentifier")      
+
     else
       @creatable_identifiers.delete("HGVMetaIdentifier")      
     end
@@ -472,17 +474,23 @@ class PublicationsController < ApplicationController
     collection = params["#{identifier_class}CollectionSelect".intern]
     volume = params[:volume_number]
     document = params[:document_number]
+    urn = params[:edition_urn]
     
-    if volume == 'Volume Number'
+    if (identifier_class == 'CTSIdentifier') && urn.blank?
+     flash[:error] = 'Error creating publication: you must specify an edition urn'
+     redirect_to dashboard_url
+        return
+    elsif (identifier_class != 'CTSIdentifier')
+      if volume == 'Volume Number'
       volume = ''
-    end
+      end
     
-    if (document == 'Document Number') || document.blank?
-      flash[:error] = 'Error creating publication: you must specify a document number'
-      redirect_to dashboard_url
-      return
+      if (document == 'Document Number') || document.blank?
+        flash[:error] = 'Error creating publication: you must specify a document number'
+        redirect_to dashboard_url
+        return
+      end
     end
-    
     if identifier_class == 'DDBIdentifier'
       document_path = [collection, volume, document].join(';')
     elsif identifier_class == 'HGVIdentifier'
@@ -492,14 +500,26 @@ class PublicationsController < ApplicationController
       else
         document_path = [collection, volume, document].join('_')
       end
+    elsif identifier_class == 'CTSIdentifier'
+        document_path = urn.sub!(/urn:cts:/,'').tr!(':','/')
     end
     
-    namespace = identifier_class.constantize::IDENTIFIER_NAMESPACE
     
-    identifier = [NumbersRDF::NAMESPACE_IDENTIFIER, namespace, document_path].join('/')
+    
+    if (identifier_class == 'CTSIdentifier')
+      identifier = document_path
+    else
+      namespace = identifier_class.constantize::IDENTIFIER_NAMESPACE
+      identifier = [NumbersRDF::NAMESPACE_IDENTIFIER, namespace, document_path].join('/')
+    end
     
     if identifier_class == 'HGVIdentifier'
       related_identifiers = NumbersRDF::NumbersHelper.collection_identifier_to_identifiers(identifier)
+    elsif identifier_class == 'CTSIdentifier'
+      # TODO pull in translation and CITE identifiers from CTS Inventory?
+      trans_identifier = identifier.clone.sub!(/grc/,'eng')
+      related_identifiers = [identifier,trans_identifier]
+      #related_identifiers = NumbersRDF::NumbersHelper.identifier_to_identifiers(identifier)
     else
       related_identifiers = NumbersRDF::NumbersHelper.identifier_to_identifiers(identifier)
     end

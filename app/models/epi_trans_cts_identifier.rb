@@ -1,6 +1,6 @@
 class EpiTransCTSIdentifier < EpiCTSIdentifier   
   
-  PATH_PREFIX = 'CTS_EPI_XML'
+  PATH_PREFIX = 'CTS_XML_Trans_EpiDoc'
   COLLECTION_XML_PATH = 'CTS_INVENTORIES/epigraphy.xml'
   TEMPORARY_COLLECTION = 'TempTrans'
   

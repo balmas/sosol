@@ -105,6 +105,11 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'ajax_proxy',
     :action => 'proxy',
     :id => /papyri\.info.*/
+   
+  map.connect 'cts/editions/:inventory',
+     :controller => 'cts_proxy',
+     :action => 'editions',
+     :inventory => /[^\/]*/
   
   # The priority is based upon order of creation: first created -> highest priority.
 

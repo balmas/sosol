@@ -10,6 +10,10 @@ class CTSIdentifier < Identifier
   NAMESPACE_DOMAIN = '.perseus.org'
   TEMPORARY_COLLECTION = 'TempTexts'
   
+  def self.inventories_hash
+    return CTS::CTSLib.getInventoriesHash()
+  end
+  
   def self.next_temporary_identifier
     year = Time.now.year
     latest = self.find(:all,
@@ -90,6 +94,6 @@ class CTSIdentifier < Identifier
     path_components << cts_xml_path
     
     # e.g. CTS_EPI_XML/igvii/2543-2545/igvii.2543-2545.perseus-grc1.xml
-    return File.join(self.class::PATH_PREFIX,path_components)
+    return File.join(path_components)
   end
 end

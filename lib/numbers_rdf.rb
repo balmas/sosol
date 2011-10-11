@@ -145,7 +145,12 @@ module NumbersRDF
           identifiers.each do |identifier|
             local_identifier = identifier_to_local_identifier(identifier)
             components = identifier_to_components(local_identifier)
-            key = components[1]
+            if (components[0] =~ /perseus.org/)
+              key = components[0].clone.sub!(/.perseus.org/,'')
+            else
+              key = components[1]
+            end
+              
             identifiers_hash[key] = 
               Array.new() unless identifiers_hash.has_key?(key)
             identifiers_hash[key] << identifier
