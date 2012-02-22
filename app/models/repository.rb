@@ -88,13 +88,15 @@ class Repository
   end
   
   def get_blob_data(blob)
+    Rails.logger.info("Getting blog data")
     begin
       # blob.data gets INSANELY slow for large files in a large repo,
       # this uses @repo.git.show to call a git command instead:
       #   slower than I would like but still an order of magnitude
       #   faster (for an example see e.g.
       #   DDB_EpiDoc_XML/p.mich/p.mich.4.1/p.mich.4.1.224.xml)
-      data = blob.nil? ? nil : @repo.git.show({}, blob.id.to_s)
+      # data = blob.nil? ? nil : @repo.git.show({}, blob.id.to_s)
+      data = blob.nil? ? nil : blob.data
       return data
     rescue Grit::Git::GitTimeout
       self.class.increase_timeout
@@ -160,6 +162,7 @@ class Repository
   end
   
   def fetch_objects(other_repo)
+    Rails.logger.info("Fetching objects from #{other_repo}")
     self.add_remote(other_repo)
     begin
       @repo.remote_fetch(other_repo.name)

@@ -66,7 +66,7 @@
     - for identifier in @publication.identifiers 
       %h3
         == #{identifier.class::FRIENDLY_NAME} - 
-        = render :partial => "identifiers/pn_link", :locals => {:identifier => identifier}
+        //= render :partial => "identifiers/pn_link", :locals => {:identifier => identifier}
 
       %p
         = image_tag(identifier.class == DDBIdentifier ? 'ddb.gif' : identifier.class == HGVIdentifier ? 'hgv.gif' : 'CTS.gif')  
@@ -134,7 +134,7 @@
     - if %w{editing new}.include?(@publication.status)
       - for class_type in @creatable_identifiers
         - link_type = class_type.constantize::FRIENDLY_NAME
-        - create_type = 'Create new ' + link_type
+        - create_type = 'Link new ' + link_type
         - newstyle = 'style="color:white; background-color:#005DAA"'
         = link_to(create_type, options = {:controller => 'identifiers', :action => 'create', :publication_id => @publication.id, :identifier_type => class_type, :method => :post}, html_options = {:id => "#{link_type}", :onclick => "$('#{link_type}').replace('<b #{newstyle}>Creating New #{link_type}...</b>');"})
      

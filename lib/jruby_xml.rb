@@ -61,6 +61,16 @@ module JRubyXML
     end
   end
   
+  class TEIAValidator < JARVValidator
+    def initialize
+      @verifier_factory = 
+        org.iso_relax.verifier.VerifierFactory.newInstance(
+          "http://relaxng.org/ns/structure/1.0")
+      @schema = verifier_factory.compileSchema(
+        "https://raw.github.com/CDRH/abbot/master/resources/target/tei-xl.rng")
+    end
+  end
+  
   class EpiDocP5Validator < JARVValidator
     def initialize
       @verifier_factory = 

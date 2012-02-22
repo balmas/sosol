@@ -1,0 +1,8 @@
+- form_for :passage_cts_identifer, Identifier.new, :url => { :controller => "passage_cts_identifiers", :action => "create" } do |form|
+  = label_tag 'passage', 'Passage or Range:'
+  = text_field_tag 'passage', '', :size => 40
+  %br
+  = label_tag 'passage_select', 'Or select from a list of valid refs:'
+  = select_tag 'passage_select'
+  %br
+  = form.submit "Retrieve", :class => ''

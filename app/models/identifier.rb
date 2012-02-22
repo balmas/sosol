@@ -1,10 +1,12 @@
 class Identifier < ActiveRecord::Base
   #TODO - is Biblio needed?
-  IDENTIFIER_SUBCLASSES = %w{ EpiCTSIdentifier EpiTransCTSIdentifier EpiMetaCITEIdentifier DDBIdentifier HGVMetaIdentifier HGVTransIdentifier HGVBiblioIdentifier }
+  IDENTIFIER_SUBCLASSES = %w{ PassageCTSIdentifier TeiCTSIdentifier EpiCTSIdentifier EpiTransCTSIdentifier EpiMetaCITEIdentifier DDBIdentifier HGVMetaIdentifier HGVTransIdentifier HGVBiblioIdentifier }
   
   FRIENDLY_NAME = "Base Identifier"
   
   IDENTIFIER_STATUS = %w{ new editing submitted approved finalizing committed archived }
+  
+  EDIT_ARTIFACT = false
   
   validates_presence_of :name, :type
   
@@ -139,7 +141,7 @@ class Identifier < ActiveRecord::Base
          if self.respond_to?("is_reprinted?") && self.is_reprinted?
            title += " (reprinted)"
          end
-      elsif (self.class == EpiCTSIdentifier) || (self.class == EpiTransCTSIdentifier)
+      elsif (self.class == EpiCTSIdentifier) || (self.class == EpiTransCTSIdentifier) || (self.class == PassageCTSIdentifier) || (self.class == TeiCTSIdentifier)
         title = self.name
       else # HGV with no name
         title = "HGV " + self.name.split('/').last.tr(';',' ')

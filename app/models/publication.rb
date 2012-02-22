@@ -52,8 +52,10 @@ class Publication < ActiveRecord::Base
     Rails.logger.info('------------------------------------')
 
     #merge xml
-    meta = REXML::Document.new tmp[:EpiMetaCITEIdentifier]
-    text = REXML::Document.new tmp[:EpiCTSIdentifier]
+    meta = REXML::Document.new tmp[:EpiMetaCITEIdentifier].to_s
+    #text << REXML::Document.new tmp[:EpiCTSIdentifier].to_s
+    #text << REXML::Document.new tmp[:PassageCTSIdentifier].to_s
+    
 
     Rails.logger.info('---------------DDB xml document---------------------')
 
@@ -88,6 +90,8 @@ class Publication < ActiveRecord::Base
   #publication title is named using first identifier
   def populate_identifiers_from_identifiers(identifiers, original_title = nil)
 
+    Rails.logger.info("populating identifiers")
+
     self.repository.update_master_from_canonical
     # Coming in from an identifier, build up a publication
     if identifiers.class == String
@@ -109,20 +113,24 @@ class Publication < ActiveRecord::Base
     end
     self.title = original_title
 
-    [EpiCTSIdentifier,EpiTransCTSIdentifier,EpiMetaCITEIdentifier,DDBIdentifier, HGVMetaIdentifier, HGVTransIdentifier].each do |identifier_class|
+    [TeiCTSIdentifier,EpiCTSIdentifier,EpiTransCTSIdentifier,EpiMetaCITEIdentifier,DDBIdentifier, HGVMetaIdentifier, HGVTransIdentifier].each do |identifier_class|
+      Rails.logger.info("Checking for #{identifier_class::IDENTIFIER_NAMESPACE} in #{identifiers.inspect}")
+
       if identifiers.has_key?(identifier_class::IDENTIFIER_NAMESPACE)
         identifiers[identifier_class::IDENTIFIER_NAMESPACE].each do |identifier_string|
           temp_id = identifier_class.new(:name => identifier_string)
-          # make sure we have a path on master before forking it for this publication
-          unless self.repository.get_file_from_branch(temp_id.to_path, 'master').blank?
+          Rails.logger.info("associating identifier #{identifier_string} at #{temp_id.to_path}")
+          # make sure we have a path on master before forking it for this publication 
+          unless (self.repository.get_file_from_branch(temp_id.to_path, 'master').blank?)
+            Rails.logger.info("adding identifier to pub #{temp_id}")
             self.identifiers << temp_id
             if self.title == original_title
               self.title = temp_id.titleize
             end
-          end
-        end
-      end
-    end
+         end #unless
+        end # do
+      end # if
+    end # do
 
     #reset the title to what the caller wants
     if original_was_nil

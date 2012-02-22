@@ -1,0 +1,448 @@
+-- MySQL dump 10.11
+--
+-- Host: localhost    Database: sosol
+-- ------------------------------------------------------
+-- Server version	5.0.77
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `boards`
+--
+
+DROP TABLE IF EXISTS `boards`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `boards` (
+  `id` int(11) NOT NULL auto_increment,
+  `title` varchar(255) default NULL,
+  `category` varchar(255) default NULL,
+  `decree_id` int(10) default NULL,
+  `created_at` datetime default NULL,
+  `updated_at` datetime default NULL,
+  `finalizer_user_id` int(10) default NULL,
+  `identifier_classes` text,
+  `rank` decimal(10,0) default NULL,
+  `friendly_name` varchar(255) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `boards`
+--
+
+LOCK TABLES `boards` WRITE;
+/*!40000 ALTER TABLE `boards` DISABLE KEYS */;
+INSERT INTO `boards` VALUES (1,'Test Board',NULL,NULL,'2011-10-11 22:11:54','2011-10-11 22:11:54',NULL,'--- \n- EpiCTSIdentifier\n- EpiTransCTSIdentifier\n- EpiMetaCITEIdentifier\n','1','Test Board');
+/*!40000 ALTER TABLE `boards` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `boards_users`
+--
+
+DROP TABLE IF EXISTS `boards_users`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `boards_users` (
+  `board_id` int(10) default NULL,
+  `user_id` int(10) default NULL,
+  `created_at` datetime default NULL,
+  `updated_at` datetime default NULL,
+  UNIQUE KEY `index_boards_users_on_board_id_and_user_id` (`board_id`,`user_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `boards_users`
+--
+
+LOCK TABLES `boards_users` WRITE;
+/*!40000 ALTER TABLE `boards_users` DISABLE KEYS */;
+INSERT INTO `boards_users` VALUES (1,2,'2011-10-11 21:40:51','2011-10-11 21:40:51'),(1,3,'2011-10-26 10:59:37','2011-10-26 10:59:37');
+/*!40000 ALTER TABLE `boards_users` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `comments`
+--
+
+DROP TABLE IF EXISTS `comments`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `comments` (
+  `id` int(11) NOT NULL auto_increment,
+  `comment` text,
+  `user_id` int(10) default NULL,
+  `identifier_id` int(10) default NULL,
+  `reason` varchar(255) default NULL,
+  `created_at` datetime default NULL,
+  `updated_at` datetime default NULL,
+  `git_hash` varchar(255) default NULL,
+  `publication_id` int(10) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `comments`
+--
+
+LOCK TABLES `comments` WRITE;
+/*!40000 ALTER TABLE `comments` DISABLE KEYS */;
+/*!40000 ALTER TABLE `comments` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `decrees`
+--
+
+DROP TABLE IF EXISTS `decrees`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `decrees` (
+  `id` int(11) NOT NULL auto_increment,
+  `action` varchar(255) default NULL,
+  `trigger` decimal(5,2) default NULL,
+  `choices` varchar(255) default NULL,
+  `board_id` int(10) default NULL,
+  `created_at` datetime default NULL,
+  `updated_at` datetime default NULL,
+  `tally_method` varchar(255) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `decrees`
+--
+
+LOCK TABLES `decrees` WRITE;
+/*!40000 ALTER TABLE `decrees` DISABLE KEYS */;
+INSERT INTO `decrees` VALUES (1,'reject','1.00','REJECT',1,'2011-10-11 22:12:11','2011-10-11 22:12:11','count'),(2,'approve','1.00','APPROVE',1,'2011-10-11 22:12:21','2011-10-11 22:12:21','count');
+/*!40000 ALTER TABLE `decrees` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `docos`
+--
+
+DROP TABLE IF EXISTS `docos`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `docos` (
+  `id` int(11) NOT NULL auto_increment,
+  `line` decimal(7,2) default NULL,
+  `category` varchar(255) default NULL,
+  `description` varchar(255) default NULL,
+  `preview` varchar(255) default NULL,
+  `leiden` varchar(255) default NULL,
+  `xml` varchar(255) default NULL,
+  `url` varchar(255) default NULL,
+  `created_at` datetime default NULL,
+  `updated_at` datetime default NULL,
+  `urldisplay` varchar(255) default NULL,
+  `note` text,
+  `docotype` varchar(255) NOT NULL default 'text',
+  PRIMARY KEY  (`id`),
+  KEY `index_docos_on_docotype` (`docotype`),
+  KEY `index_docos_on_id_and_docotype` (`id`,`docotype`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `docos`
+--
+
+LOCK TABLES `docos` WRITE;
+/*!40000 ALTER TABLE `docos` DISABLE KEYS */;
+/*!40000 ALTER TABLE `docos` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `emailers`
+--
+
+DROP TABLE IF EXISTS `emailers`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `emailers` (
+  `id` int(11) NOT NULL auto_increment,
+  `board_id` int(10) default NULL,
+  `user_id` int(10) default NULL,
+  `extra_addresses` text,
+  `when_to_send` varchar(255) default NULL,
+  `include_document` tinyint(1) default NULL,
+  `message` text,
+  `created_at` datetime default NULL,
+  `updated_at` datetime default NULL,
+  `send_to_owner` tinyint(1) default NULL,
+  `send_to_all_board_members` tinyint(1) default '0',
+  `include_comments` tinyint(1) default '0',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `emailers`
+--
+
+LOCK TABLES `emailers` WRITE;
+/*!40000 ALTER TABLE `emailers` DISABLE KEYS */;
+/*!40000 ALTER TABLE `emailers` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `emailers_users`
+--
+
+DROP TABLE IF EXISTS `emailers_users`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `emailers_users` (
+  `emailer_id` varchar(255) default NULL,
+  `user_id` int(10) default NULL,
+  `created_at` datetime default NULL,
+  `updated_at` datetime default NULL,
+  UNIQUE KEY `index_emailers_users_on_emailer_id_and_user_id` (`emailer_id`,`user_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `emailers_users`
+--
+
+LOCK TABLES `emailers_users` WRITE;
+/*!40000 ALTER TABLE `emailers_users` DISABLE KEYS */;
+/*!40000 ALTER TABLE `emailers_users` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `events`
+--
+
+DROP TABLE IF EXISTS `events`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `events` (
+  `id` int(11) NOT NULL auto_increment,
+  `category` varchar(255) default NULL,
+  `created_at` datetime default NULL,
+  `updated_at` datetime default NULL,
+  `owner_id` int(10) default NULL,
+  `owner_type` varchar(255) default NULL,
+  `target_id` int(10) default NULL,
+  `target_type` varchar(255) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `events`
+--
+
+LOCK TABLES `events` WRITE;
+/*!40000 ALTER TABLE `events` DISABLE KEYS */;
+INSERT INTO `events` VALUES (1,'started editing','2011-10-11 18:09:40','2011-10-11 18:09:40',1,'User',1,'Publication'),(2,'started editing','2011-10-11 21:40:57','2011-10-11 21:40:57',2,'User',2,'Publication'),(3,'started editing','2011-10-26 10:59:46','2011-10-26 10:59:46',3,'User',3,'Publication');
+/*!40000 ALTER TABLE `events` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `identifiers`
+--
+
+DROP TABLE IF EXISTS `identifiers`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `identifiers` (
+  `id` int(11) NOT NULL auto_increment,
+  `name` varchar(255) default NULL,
+  `type` varchar(255) default NULL,
+  `created_at` datetime default NULL,
+  `updated_at` datetime default NULL,
+  `publication_id` int(10) default NULL,
+  `alternate_name` varchar(255) default NULL,
+  `modified` tinyint(1) default '0',
+  `title` varchar(255) default NULL,
+  `status` varchar(255) default 'editing',
+  `board_id` int(10) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `identifiers`
+--
+
+LOCK TABLES `identifiers` WRITE;
+/*!40000 ALTER TABLE `identifiers` DISABLE KEYS */;
+INSERT INTO `identifiers` VALUES (1,'epigraphy.perseus.org/igvii.2543-2545.perseus-grc1','EpiCTSIdentifier','2011-10-11 18:09:40','2011-10-11 18:09:40',1,NULL,0,'epigraphy.perseus.org/igvii.2543-2545.perseus-grc1','editing',NULL),(2,'epigraphy.perseus.org/igvii.2543-2545.perseus-eng1','EpiTransCTSIdentifier','2011-10-11 18:09:40','2011-10-11 18:09:41',1,NULL,0,'epigraphy.perseus.org/igvii.2543-2545.perseus-eng1','editing',NULL),(3,'epigraphy.perseus.org/igvii.2543-2545.perseus-grc1','EpiCTSIdentifier','2011-10-11 21:40:57','2011-10-11 21:40:57',2,NULL,0,'epigraphy.perseus.org/igvii.2543-2545.perseus-grc1','editing',NULL),(4,'epigraphy.perseus.org/igvii.2543-2545.perseus-eng1','EpiTransCTSIdentifier','2011-10-11 21:40:57','2011-10-11 21:40:57',2,NULL,0,'epigraphy.perseus.org/igvii.2543-2545.perseus-eng1','editing',NULL),(5,'epigraphy.perseus.org/igvii.2543-2545.perseus-grc1','EpiCTSIdentifier','2011-10-26 10:59:46','2011-10-26 10:59:46',3,NULL,0,'epigraphy.perseus.org/igvii.2543-2545.perseus-grc1','editing',NULL),(6,'epigraphy.perseus.org/igvii.2543-2545.perseus-eng1','EpiTransCTSIdentifier','2011-10-26 10:59:46','2011-10-26 10:59:46',3,NULL,0,'epigraphy.perseus.org/igvii.2543-2545.perseus-eng1','editing',NULL);
+/*!40000 ALTER TABLE `identifiers` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `publications`
+--
+
+DROP TABLE IF EXISTS `publications`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `publications` (
+  `id` int(11) NOT NULL auto_increment,
+  `title` varchar(255) default NULL,
+  `created_at` datetime default NULL,
+  `updated_at` datetime default NULL,
+  `owner_id` int(10) default NULL,
+  `owner_type` varchar(255) default NULL,
+  `branch` varchar(255) default NULL,
+  `status` varchar(255) default 'editing',
+  `creator_id` int(10) default NULL,
+  `creator_type` varchar(255) default NULL,
+  `parent_id` int(10) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `publications`
+--
+
+LOCK TABLES `publications` WRITE;
+/*!40000 ALTER TABLE `publications` DISABLE KEYS */;
+INSERT INTO `publications` VALUES (1,'epigraphy.perseus.org/igvii.2543-2545.perseus-eng1','2011-10-11 18:09:40','2011-10-11 18:09:40',1,'User','epigraphy.perseus.org/igvii.2543-2545.perseus-eng1','editing',1,'User',NULL),(2,'epigraphy.perseus.org/igvii.2543-2545.perseus-eng1','2011-10-11 21:40:57','2011-10-11 21:40:57',2,'User','epigraphy.perseus.org/igvii.2543-2545.perseus-eng1','editing',2,'User',NULL),(3,'epigraphy.perseus.org/igvii.2543-2545.perseus-eng1','2011-10-26 10:59:46','2011-10-26 10:59:46',3,'User','epigraphy.perseus.org/igvii.2543-2545.perseus-eng1','editing',3,'User',NULL);
+/*!40000 ALTER TABLE `publications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `schema_migrations`
+--
+
+DROP TABLE IF EXISTS `schema_migrations`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `schema_migrations` (
+  `version` varchar(255) NOT NULL,
+  UNIQUE KEY `unique_schema_migrations` (`version`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `schema_migrations`
+--
+
+LOCK TABLES `schema_migrations` WRITE;
+/*!40000 ALTER TABLE `schema_migrations` DISABLE KEYS */;
+INSERT INTO `schema_migrations` VALUES ('20081111161656'),('20090123200908'),('20090203185629'),('20090209160712'),('20090219214600'),('20090303201719'),('20090303201909'),('20090303201939'),('20090303215658'),('20090305024337'),('20090306052257'),('20090319212311'),('20090323182009'),('20090324192114'),('20090327165214'),('20090327165311'),('20090401203640'),('20090409191823'),('20090409230112'),('20090417204933'),('20090420202625'),('20090420214648'),('20090422190506'),('20090422194156'),('20090423005730'),('20090429181139'),('20090429181443'),('20090429182155'),('20090429210048'),('20090507180036'),('20090514210236'),('20090528165638'),('20090528192227'),('20090604145921'),('20090604155626'),('20090620155431'),('20090916153409'),('20090929170138'),('20090930202845'),('20091019182632'),('20091021162523'),('20091026160035'),('20091105164204'),('20091110204800'),('20091111174622'),('20091112215750'),('20091113210934'),('20091117193653'),('20091202150900'),('20091207163339'),('20100120175728'),('20100127044952'),('20100203215323'),('20100205163517'),('20100205163546'),('20100408204549'),('20100422171330'),('20100424033541'),('20100820140941'),('20110221221456'),('20110303222737'),('20110811204557');
+/*!40000 ALTER TABLE `schema_migrations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_identifiers`
+--
+
+DROP TABLE IF EXISTS `user_identifiers`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `user_identifiers` (
+  `id` int(11) NOT NULL auto_increment,
+  `identifier` varchar(255) default NULL,
+  `user_id` int(10) default NULL,
+  `created_at` datetime default NULL,
+  `updated_at` datetime default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `user_identifiers`
+--
+
+LOCK TABLES `user_identifiers` WRITE;
+/*!40000 ALTER TABLE `user_identifiers` DISABLE KEYS */;
+INSERT INTO `user_identifiers` VALUES (1,'https://www.google.com/profiles/107406713070350417349',1,'2011-10-11 18:05:52','2011-10-11 18:05:52'),(2,'https://www.google.com/profiles/116656916179778544298',2,'2011-10-11 21:40:51','2011-10-11 21:40:51'),(3,'https://www.google.com/profiles/115505149523531010286',3,'2011-10-26 10:59:37','2011-10-26 10:59:37');
+/*!40000 ALTER TABLE `user_identifiers` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL auto_increment,
+  `name` varchar(255) default NULL,
+  `created_at` datetime default NULL,
+  `updated_at` datetime default NULL,
+  `has_repository` tinyint(1) default '0',
+  `language_prefs` varchar(255) default NULL,
+  `admin` tinyint(1) default NULL,
+  `developer` tinyint(1) default NULL,
+  `affiliation` varchar(255) default NULL,
+  `email` varchar(255) default NULL,
+  `emailer_id` int(10) default NULL,
+  `full_name` varchar(255) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `users`
+--
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'balmas','2011-10-11 18:05:52','2011-10-11 18:05:52',0,NULL,1,NULL,NULL,'balmas@gmail.com',NULL,'Bridget Almas'),(2,'Marie-Claire.Beaulieu','2011-10-11 21:40:51','2011-10-11 21:40:51',0,NULL,NULL,NULL,NULL,'Marie-Claire.Beaulieu@Tufts.edu',NULL,'Marie-Claire Beaulieu'),(3,'gcrane2008','2011-10-26 10:59:37','2011-10-26 10:59:37',0,NULL,NULL,NULL,NULL,'gcrane2008@gmail.com',NULL,'Gregory Crane');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `votes`
+--
+
+DROP TABLE IF EXISTS `votes`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `votes` (
+  `id` int(11) NOT NULL auto_increment,
+  `choice` varchar(255) default NULL,
+  `user_id` int(10) default NULL,
+  `created_at` datetime default NULL,
+  `updated_at` datetime default NULL,
+  `publication_id` int(10) default NULL,
+  `identifier_id` int(10) default NULL,
+  `board_id` int(10) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Dumping data for table `votes`
+--
+
+LOCK TABLES `votes` WRITE;
+/*!40000 ALTER TABLE `votes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `votes` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2011-10-28 14:36:47

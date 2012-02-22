@@ -17,10 +17,18 @@
   }
   function populate_selector(select_element,options) {
     select_element.childElements().each(Element.remove);
+    
     for (var i=0; i<options.length; i++)
     {
-      select_element.insert("<option>" + options[i] + "</option>"); 
+      parts = options[i].split('|');
+      if (parts.length == 2) {
+        select_element.insert("<option value='" + parts[1] + "'>" + parts[0] + "</option>");
+      }
+      else if (options[i]){
+        select_element.insert("<option>" + options[i] + "</option>");
+      } 
     }
+     select_element.insert("<option value=''>click to select...</option>");
   }
   
   function toggle_availability() {
@@ -49,7 +57,7 @@
         method: 'get',
         dataType: 'text',
         onSuccess: function(response) {
-          populate_selector($('edition_urn'),response.responseText.split(','));
+          populate_selector($('edition_urn'),response.responseText.split(',').sort());
         }
      });
   }
@@ -152,7 +160,7 @@
   }
   
   function update_editions() {
-    get_allowed_values($('volume_number'));
+    get_edition_urns();
   }
   document.observe("dom:loaded", function() {
     $('IdentifierClass').childElements()[0].selected = true;
@@ -173,8 +181,9 @@
   - form_tag :controller => 'publications', :action => "create_from_selector" do
     = select_tag('IdentifierClass', options_for_select([%w{CTS CTSIdentifier}]), :onchange => "['CTS',].each(function(i){$(i + 'IdentifierCollectionSelect').toggleClassName('invisible')});reset_selector($('volume_number'));reset_selector($('document_number'));$('volume_number').disabled=true;$('document_number').disabled=true;")
     - [CTSIdentifier].each do |identifier_class|
-      = select_tag("#{identifier_class}CollectionSelect", options_for_select(identifier_class.inventories_hash.keys.sort), :onchange => "update_editions();$('emend_button').disabled='';if(this.options[0].value==''){this.remove(0)}")
+      = select_tag("#{identifier_class}CollectionSelect", options_for_select(identifier_class.inventories_hash.keys), :onchange => "update_editions();$('emend_button').disabled='';if(this.options[0].value==''){this.remove(0)}")
     = select_tag 'edition_urn', nil, :disabled => true, :style => 'min-width: 5em;', :onchange => "if(this.options[0].value==''){this.remove(0)};"
+    //= text_field_tag('passage')
     -if emend == :showemend
       = submit_tag "Emend", :disabled => true, :id => 'emend_button'
     -else

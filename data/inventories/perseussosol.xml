@@ -1,0 +1,63 @@
+<TextInventory xmlns="http://chs.harvard.edu/xmlns/cts3/ti" tiversion="3.0.rc1">
+    <collection id="demo">
+        <title xmlns="http://purl.org/dc/elements/1.1" xml:lang="eng">Alpheios CTS Repository template</title>
+        <creator xmlns="http://purl.org/dc/elements/1.1">The Alpheios Project, Ltd.</creator>
+        <coverage xmlns="http://purl.org/dc/elements/1.1" xml:lang="eng">TBD</coverage>
+        <description xmlns="http://purl.org/dc/elements/1.1" xml:lang="eng">Inventory of texts in the Alpheios text repository. </description>
+        <rights xmlns="http://purl.org/dc/elements/1.1" xml:lang="eng">TBD - Creative Commons License info</rights>
+    </collection>
+    <textgroup projid="greekLang:tlg0012">
+        <groupname xml:lang="eng">Homeric Poems</groupname>
+        <work projid="greekLang:tlg001" xml:lang="eng">
+            <title xml:lang="eng">Iliad</title>
+            <edition projid="greekLang:perseus-grc1">
+                <label xml:lang="eng">Iliad</label>
+                <online docname="/db/repository/greekLang/tlg0012/tlg001/tlg0012.tlg001.perseus-grc1.xml">
+                    <validate schema="documentschema.rng"/>
+                    <namespaceMapping abbreviation="tei" nsURI="http://www.tei-c.org/ns/1.0"/>
+                    <citationMapping>
+                        <citation label="Book" xpath="/tei:div[@n='?']" scope="/tei:TEI/tei:text/tei:body">
+                            <citation label="Line" xpath="/tei:l[@n='?']" scope="/tei:TEI/tei:text/tei:body/tei:div[@n='?']"/>
+                        </citation>
+                    </citationMapping>
+                </online>
+            </edition>
+        </work>
+        <work projid="greekLang:tlg002" xml:lang="eng">
+            <title xml:lang="eng">Odyssey</title>
+            <edition projid="greekLang:perseus-grc1">
+                <label xml:lang="eng">Odyssey</label>
+                <online docname="/db/repository/greekLang/tlg0012/tlg001/tlg0012.tlg002.perseus-grc1.xml">
+                    <validate schema="documentschema.rng"/>
+                    <namespaceMapping abbreviation="tei" nsURI="http://www.tei-c.org/ns/1.0"/>
+                    <citationMapping>
+                        <citation label="Book" xpath="/tei:div[@n='?']" scope="/tei:TEI/tei:text/tei:body">
+                            <citation label="Line" xpath="/tei:l[@n='?']" scope="/tei:TEI/tei:text/tei:body/tei:div[@n='?']"/>
+                        </citation>
+                    </citationMapping>
+                </online>
+            </edition>
+        </work>
+    </textgroup>
+    <textgroup projid="latinLang:phi0690">
+        <groupname xml:lang="en">P. Vergilius Maro</groupname>
+        <work projid="latinLang:phi003" xml:lang="lat">
+            <edition projid="latinLang:perseus-lat1">
+                <label xml:lang="en">Aeneid</label>
+                <description xmlns="" xml:lang="en">Perseus:bib:oclc,22858571, Vergil. Bucolics,
+                    Aeneid, and Georgics Of Vergil. J. B. Greenough. Boston. Ginn &amp;amp; Co.
+                    1900.</description>
+                <online docname="1999.02.0055.xml">
+                    <validate schema="teia.xsd"/>
+                    <namespaceMapping abbreviation="tei" nsURI="http://www.tei-c.org/ns/1.0"/>
+                    <citationMapping>
+                        <citation label="book" xpath="" scope="">
+                            <citation label="card*" xpath="" scope=""/>
+                        </citation>
+                    </citationMapping>
+                </online>
+                <memberof collection="Perseus:collection:Greco-Roman"/>
+            </edition>
+          </work>
+      </textgroup>
+</TextInventory>

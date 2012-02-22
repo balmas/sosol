@@ -33,8 +33,9 @@ class CTSIdentifier < Identifier
   end
   
   def self.collection_names
+    # to do - pull from CTS inventory
     unless defined? @collection_names
-      @collection_names = Array ["epigraphy.perseus.org"]
+      @collection_names = Array ["epigraphy.perseus.org","greekLang","latinLang"]
     end
     return @collection_names
   end
@@ -53,11 +54,7 @@ class CTSIdentifier < Identifier
     return @collection_names_hash
   end
   def id_attribute
-     cts_textgroup, cts_work, cts_edition, cts_exemplar =
-      self.to_components.last.split('.')
-    
-    
-    return [IDENTIFIER_PREFIX,self.class::IDENTIFIER_NAMESPACE,NAMESPACE_DOMAIN].join('') + ':' + [cts_textgroup, cts_work, cts_edition, cts_exemplar].reject{|i| i.blank?}.join('.') 
+     return IDENTIFIER_PREFIX + self.to_components.join(':')
   end
   
   def n_attribute
@@ -71,10 +68,19 @@ class CTSIdentifier < Identifier
     
   def to_path
     path_components = [ self.class::PATH_PREFIX ]
-    cts_textgroup,cts_work,cts_edition,cts_exemplar =
-      self.to_components[1..-1].join('/').split('.',4).collect {|x| x.tr(',/','-_')}
+    temp_components = self.to_components
+    # should give us, e.g.
+    # [0] greekLang - namespace
+    # [1] tlg0012.tlg001.perseus-grc1 - edition or examplar urn
+    # [2] 1.1 - passage
+    cts_ns = temp_components[0]
+    cts_urn = temp_components[1]
+    cts_passage = temp_components[2]
     
-    # e.g. igvii.2543-2545.perseus-grc1.xml
+    cts_textgroup,cts_work,cts_edition,cts_exemplar, =
+      cts_urn.split('.',4).collect {|x| x.tr(',/','-_')}
+    
+    # e.g. tlg0012.tlg001.perseus-grc1.1.1.xml
     cts_xml_path_components = []
     cts_xml_path_components << cts_textgroup
     unless cts_work.nil?
@@ -84,16 +90,20 @@ class CTSIdentifier < Identifier
     unless cts_exemplar.nil? 
       cts_xml_path_components << cts_exemplar 
     end
+    unless cts_passage.nil? 
+      cts_xml_path_components << cts_passage 
+    end
     cts_xml_path_components << 'xml' 
     cts_xml_path = cts_xml_path_components.join('.')
     
+    path_components << cts_ns
     path_components << cts_textgroup
     unless cts_work.nil?
       path_components << cts_work
     end
     path_components << cts_xml_path
     
-    # e.g. CTS_EPI_XML/igvii/2543-2545/igvii.2543-2545.perseus-grc1.xml
+    # e.g. CTS_XML_PASSAGES/greekLang/tlg0012/tlg001/tlg0012.tlg001.perseus-grc1.1.1.xml
     return File.join(path_components)
   end
 end

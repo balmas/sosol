@@ -12,10 +12,13 @@ class PublicationsController < ApplicationController
     
     #WARNING hardcoded identifier depenency hack  
     #enforce creation order
+    # for now, never create new TEI texts -- will add ability later
+    @creatable_identifiers.delete("TeiCTSIdentifier")      
     has_hgvmeta = false
     has_citemeta = false
     has_ddbtext = false
-    has_ctstext = false
+    has_epicts = false
+    has_teicts = false
     @publication.identifiers.each do |i|
       if i.class.to_s == "HGVMetaIdentifier"
         has_hgvmeta = true
@@ -27,15 +30,22 @@ class PublicationsController < ApplicationController
        has_ddbtext = true
       end
       if i.class.to_s == "EpiCTSIdentifier"
-       has_ctstext = true
+       has_epicts = true
       end
+      if i.class.to_s == "TeiCTSIdentifier"
+       has_teicts = true
+      end
+
     end
     if !has_ddbtext
       #cant create trans
       @creatable_identifiers.delete("HGVTransIdentifier")      
     end
-    if !has_ctstext
+    if !has_epicts
       @creatable_identifiers.delete("EpiTransCTSIdentifier")
+    end
+   if !has_teicts
+      @creatable_identifiers.delete("PassageCTSIdentifier")
     end
     if !has_hgvmeta
       #cant create text
@@ -46,10 +56,15 @@ class PublicationsController < ApplicationController
     if !has_citemeta
        @creatable_identifiers.delete("EpiCTSIdentifier")
        @creatable_identifiers.delete("EpiTransCTSIdentifier")  
-       @creatable_identifiers.delete("HGVMetaIdentifier")      
-
+       @creatable_identifiers.delete("HGVMetaIdentifier")          
     else
-      @creatable_identifiers.delete("HGVMetaIdentifier")      
+      @creatable_identifiers.delete("HGVMetaIdentifier")
+    end
+    if has_teicts
+      @creatable_identifiers.delete("EpiMetaCITEIdentifier")      
+    end
+    if has_epicts
+      @creatable_identifiers.delete("PassageCTSIdentifier")   
     end
     
     #TODO - is Biblio needed?
@@ -475,11 +490,17 @@ class PublicationsController < ApplicationController
     volume = params[:volume_number]
     document = params[:document_number]
     urn = params[:edition_urn]
+    passage = params[:passage]
     
-    if (identifier_class == 'CTSIdentifier') && urn.blank?
-     flash[:error] = 'Error creating publication: you must specify an edition urn'
-     redirect_to dashboard_url
-        return
+    if (identifier_class == 'CTSIdentifier') 
+        if (urn.blank?)
+          flash[:error] = 'Error creating publication: you must specify an edition urn'
+          redirect_to dashboard_url
+          return
+        end
+        if volume == 'Passage'
+            passage = ''
+        end
     elsif (identifier_class != 'CTSIdentifier')
       if volume == 'Volume Number'
       volume = ''
@@ -502,6 +523,9 @@ class PublicationsController < ApplicationController
       end
     elsif identifier_class == 'CTSIdentifier'
         document_path = urn.sub!(/urn:cts:/,'').tr!(':','/')
+        #if (passage != '')
+        #  document_path += "/#{passage}"
+        #end
     end
     
     
@@ -516,10 +540,21 @@ class PublicationsController < ApplicationController
     if identifier_class == 'HGVIdentifier'
       related_identifiers = NumbersRDF::NumbersHelper.collection_identifier_to_identifiers(identifier)
     elsif identifier_class == 'CTSIdentifier'
-      # TODO pull in translation and CITE identifiers from CTS Inventory?
-      trans_identifier = identifier.clone.sub!(/grc/,'eng')
-      related_identifiers = [identifier,trans_identifier]
-      #related_identifiers = NumbersRDF::NumbersHelper.identifier_to_identifiers(identifier)
+      # if we have a passage, create an identifer for the passage itself and the parent text
+      if (! (passage.nil?) && passage != '')
+        # add the identifier for the full text as well as the passage
+        # which will be in the format namespace/edititionurn
+        text_identifier = identifier.clone.sub!(/^(.*?\/.*?)\/.*$/,'\1')
+        related_identifiers = [text_identifier, identifier]
+      # Hack for Epigraphy - should really pull in translation and CITE identifiers from CTS Inventory
+      elsif urn =~ /^epigraphy/
+        trans_identifier = identifier.clone.sub!(/grc/,'eng')
+        related_identifiers = [identifier,trans_identifier]
+      # otherwise we're editing an entire text
+      else
+        # TODO - add MODS record??
+        related_identifiers = [identifier]
+      end
     else
       related_identifiers = NumbersRDF::NumbersHelper.identifier_to_identifiers(identifier)
     end

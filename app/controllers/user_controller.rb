@@ -92,7 +92,7 @@ class UserController < ApplicationController
   def signin
     
   end
-  
+   
   def developer
     if !@current_user.developer
       redirect_to dashboard_url

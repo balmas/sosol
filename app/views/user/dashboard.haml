@@ -43,11 +43,11 @@
       = link_to "See Your Archived Publications", :controller => 'user', :action => 'archives',  :id => @current_user.id
     %br
   = render :partial => "publications/publication_selector", :locals => { :emend => :showemend }
-  %p
-    or create new publication:
-    = render :partial => "publications/create_from_templates_form"
-  %br
-  = link_to "Advanced Publication Creation", :controller => "publications", :action => "advanced_create"
+  //%p
+  //  or create new publication:
+  //  = render :partial => "publications/create_from_templates_form"
+  //%br
+  //= link_to "Advanced Publication Creation", :controller => "publications", :action => "advanced_create"
 
   %br
   - cache(:action => 'dashboard', :part => "board_publications_#{@current_user.id}") do

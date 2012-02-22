@@ -101,8 +101,9 @@ Rails::Initializer.run do |config|
   # RPX application configuration
   RPX_BASE_URL = 'https://rpxnow.com'
   
-  SITE_NAME = 'Perseus SoSOL'
-  SITE_FULL_NAME = 'Perseus Son of Suda On Line'
+  SITE_NAME = 'Philologist'
+  SITE_FULL_NAME = 'Philologist'
+  SITE_TAG_LINE = 'powered by Son of Suda Online'
   
   REPOSITORY_ROOT = File.join(RAILS_ROOT, 'db', 'git')
   #REPOSITORY_ROOT = '/usr/local/gitrepos'

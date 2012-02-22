@@ -145,8 +145,15 @@ module NumbersRDF
           identifiers.each do |identifier|
             local_identifier = identifier_to_local_identifier(identifier)
             components = identifier_to_components(local_identifier)
+            # BMA HACK - need better way of handling CTS namespaces 
             if (components[0] =~ /perseus.org/)
               key = components[0].clone.sub!(/.perseus.org/,'')
+            elsif (components[0] =~ /(greekLang)|(latinLang)/)
+              if (components[2])
+                key = 'passages'
+              else
+                key = 'texts'
+              end
             else
               key = components[1]
             end
