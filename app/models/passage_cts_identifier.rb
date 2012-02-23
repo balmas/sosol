@@ -11,22 +11,16 @@ class PassageCTSIdentifier < CTSIdentifier
     self.publication.identifiers.select{|i| i.class == TeiCTSIdentifier}.last
   end
   
-  def self.get_passage_identifier(publication,passage_id)
-    textid = publication.identifiers.select{|i| i.class == TeiCTSIdentifier}.last.to_components.join("/")
-    passage_identifier = "#{textid}/#{passage_id}"
-    Rails.logger.info("Passage identifier #{passage_identifier}")
-    return passage_identifier
-  end
   
-  def self.new_from_template(publication,passage_id)    
-    new_identifier = self.new(:name => passage_id)
+  def self.new_from_template(publication,passage_urn)    
+    new_identifier = self.new(:name => passage_urn.sub!(/urn:cts:/,'').tr!(':','/'))
     new_identifier.publication = publication
     new_identifier.save!
     initial_content = new_identifier.file_template
     new_identifier.set_xml_content(initial_content, :comment => "dummy passage")
     commit_sha = new_identifier.get_recent_commit_sha()
     Rails.logger.info("UUID for passage #{commit_sha}")
-    # TODO inventory should be carried along in identifier from creation
+    # TODO inventory should be carried along in identifier from creation as part of the path
     inventory = CTS::CTSLib.getInventory("perseus")
     document = new_identifier.related_text.content
     passage_xml = CTS::CTSLib.proxyGetPassage(inventory,document,new_identifier.id_attribute,commit_sha) 

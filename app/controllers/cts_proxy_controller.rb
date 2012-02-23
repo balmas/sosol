@@ -5,4 +5,8 @@ class CtsProxyController < ApplicationController
     render :text => response
   end
   
+  def validreffs
+    response = CTS::CTSLib.proxyGetValidReff(params[:inventory], params[:urn], params[:level])
+    render :text => response
+  end
 end

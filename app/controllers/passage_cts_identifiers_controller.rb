@@ -9,17 +9,31 @@ class PassageCtsIdentifiersController < IdentifiersController
   
   # present valid passage refs
   def create
-    if (! params[:passage] || params[:passage].strip == "")
-      flash[:notice] = "Supply a valid passage range"
+    if (! params[:start_passage_select_1] || params[:start_passage_select_1].strip == "")
+      flash[:notice] = "Supply a valid passage or passage range"
       render :template => 'passage_cts_identifiers/create'
       return
     else
+      Rails.logger.info(params.inspect)
+      start_level = params[:start_passage_level]
+      end_level = params[:end_passage_level]
+      if (! params["start_passage_select_#{start_level}"] || params["start_passage_select_#{start_level}"].strip == "")
+        flash[:notice] = "Select a value for all available passage parts."
+        render :template => 'passage_cts_identifiers/create'
+        return
+      end
+      start_passage_urn = params["start_passage_select_#{start_level}"].split('|')[1]
+      end_passage_urn = ''
+      if (params["end_passage_select_#{end_level}"] && params[:end_passage_select_1].strip != "")
+        end_passage_urn = '-' + (params["end_passage_select_#{start_level}"].split('|')[1]).split(':').last
+      end
+      passage_urn = start_passage_urn + end_passage_urn
       publication_identifier = params[:publication_id]
-      @publication = Publication.find(params[:publication_id])
-      passage_identifier = PassageCTSIdentifier.get_passage_identifier(@publication,params[:passage])    
+      @publication = Publication.find(params[:publication_id])  
       conflicts = []  
       for pubid in @publication.identifiers do 
-        if pubid.name == passage_identifier
+        
+        if pubid.id_attribute == passage_urn
           conflicts << pubid
         end
       end 
@@ -31,7 +45,7 @@ class PassageCtsIdentifiersController < IdentifiersController
         return
       end
       
-      @identifier = PassageCTSIdentifier.new_from_template(@publication,passage_identifier)
+      @identifier = PassageCTSIdentifier.new_from_template(@publication,passage_urn)
       flash[:notice] = "File created."
       expire_publication_cache
       redirect_to polymorphic_path([@identifier.publication, @identifier],

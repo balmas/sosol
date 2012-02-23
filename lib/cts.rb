@@ -41,6 +41,26 @@ module CTS
         return results
       end
       
+      def proxyGetValidReff(a_inventory,a_urn,a_level)
+        if (a_inventory.nil? || a_inventory == '') 
+          a_inventory = 'perseussosol'
+        end    
+        uri = URI.parse("#{EXIST_HELPER_REPO}request=GetValidReff&inv=#{a_inventory}&urn=#{a_urn}&level=#{a_level}")
+        Rails.logger.info(uri.request_uri)
+        response = Net::HTTP.start(uri.host, uri.port) do |http|
+          http.send_request('GET',uri.request_uri)
+        end
+        if (response.code == '200')
+           Rails.logger.info(response.body)
+           results = JRubyXML.apply_xsl_transform(
+                   JRubyXML.stream_from_string(response.body),
+                   JRubyXML.stream_from_file(File.join(RAILS_ROOT,
+                   %w{data xslt cts validreff_urns.xsl})))  
+        else
+           nil
+        end
+      end
+      
       def proxyGetPassage(a_inventory,a_document,a_urn,a_uuid)
           passage = ''
          
@@ -100,17 +120,6 @@ headers)
           # load document -> POST document
           # update passage -> PUT CTS.xq?request=PutPassage&urn=urn&inventory=inv -> returns doc
           # cleanup
-      end
-      
-      def proxyGetValidReffs(a_inventory,a_urn)
-         Rails.logger.info("Inventory" + self.getInventoriesHash()[a_inventory])
-         response = Net::HTTP.get_response(
-            URI.parse(self.getInventoriesHash()[a_inventory] + "&request=GetValidReffs&urn=#{a_urn}"))
-         results = JRubyXML.apply_xsl_transform(
-          JRubyXML.stream_from_string(response.body),
-          JRubyXML.stream_from_file(File.join(RAILS_ROOT,
-              %w{data xslt cts extract_reply.xsl})))
-         return results
       end
       
     end #class
