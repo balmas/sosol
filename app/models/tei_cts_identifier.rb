@@ -4,7 +4,7 @@ class TeiCTSIdentifier < CTSIdentifier
   
   FRIENDLY_NAME = "Full Text"
   
-  IDENTIFIER_NAMESPACE = 'texts'
+  IDENTIFIER_NAMESPACE = 'texts_edition'
   
   XML_VALIDATOR = JRubyXML::TEIAValidator
   

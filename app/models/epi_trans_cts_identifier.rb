@@ -1,12 +1,12 @@
 class EpiTransCTSIdentifier < EpiCTSIdentifier   
   
-  PATH_PREFIX = 'CTS_XML_Trans_EpiDoc'
+  PATH_PREFIX = 'CTS_XML_EpiDoc'
   COLLECTION_XML_PATH = 'CTS_INVENTORIES/epigraphy.xml'
   TEMPORARY_COLLECTION = 'TempTrans'
   
   FRIENDLY_NAME = "Translation"
   
-  IDENTIFIER_NAMESPACE = 'epigraphy'
+  IDENTIFIER_NAMESPACE = 'epigraphy_translation'
   
   XML_VALIDATOR = JRubyXML::EpiDocP5Validator
    

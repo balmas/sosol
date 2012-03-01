@@ -10,6 +10,28 @@ module CTS
   module CTSLib
     class << self
       
+      # method which inserts the publication type (i.e. edition or translation) into the path of a CTS urn
+      def pathForUrn(a_urn,a_pubtype) 
+        path_parts = a_urn.sub!(/urn:cts:/,'').split(':')
+        cite_parts = path_parts[1].split(/\./)
+        passage = path_parts[2]
+        last_part = cite_parts.length() - 1
+        document_path_parts = []
+        # we want to end up with NS/authornum.worknum/edition/editionnum.exemplarnum/passage
+        # NS
+        document_path_parts << path_parts[0]
+        # textgroup and work
+        document_path_parts << cite_parts[0..1].join(".")
+        # edition path insert
+        document_path_parts << a_pubtype
+        # edition and exemplar
+        document_path_parts << cite_parts[2..last_part].join(".")
+        unless passage.nil? 
+          document_path_parts << passage
+        end
+        return document_path_parts.join('/')        
+      end
+      
       def getInventory(a_inventory)
          Rails.logger.info("Inventory" + self.getInventoriesHash()[a_inventory])
          response = Net::HTTP.get_response(

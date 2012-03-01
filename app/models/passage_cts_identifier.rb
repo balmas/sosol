@@ -1,7 +1,7 @@
 class PassageCTSIdentifier < CTSIdentifier   
   
   PATH_PREFIX = 'CTS_XML_PASSAGES'
-  IDENTIFIER_NAMESPACE = 'passages'
+  IDENTIFIER_NAMESPACE = 'text_edition_passage'
   FRIENDLY_NAME = "Passage Text"
   EDIT_ARTIFACT = true
   
@@ -13,7 +13,7 @@ class PassageCTSIdentifier < CTSIdentifier
   
   
   def self.new_from_template(publication,passage_urn)    
-    new_identifier = self.new(:name => passage_urn.sub!(/urn:cts:/,'').tr!(':','/'))
+    new_identifier = self.new(:name => CTS::CTSLib.pathForUrn(passage_urn,'edition'))
     new_identifier.publication = publication
     new_identifier.save!
     initial_content = new_identifier.file_template

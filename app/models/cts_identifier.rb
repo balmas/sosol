@@ -54,7 +54,8 @@ class CTSIdentifier < Identifier
     return @collection_names_hash
   end
   def id_attribute
-     return IDENTIFIER_PREFIX + self.to_components.join(':')
+     return IDENTIFIER_PREFIX + self.to_urn_components.join(":")
+     
   end
   
   def n_attribute
@@ -66,16 +67,32 @@ class CTSIdentifier < Identifier
     self.id_attribute
   end
     
-  def to_path
-    path_components = [ self.class::PATH_PREFIX ]
+  def to_urn_components
     temp_components = self.to_components
     # should give us, e.g.
     # [0] greekLang - namespace
-    # [1] tlg0012.tlg001.perseus-grc1 - edition or examplar urn
-    # [2] 1.1 - passage
+    # [1] tlg0012.tlg001 - work
+    # [2] edition or translation
+    # [3] perseus-grc1 - edition + examplar
+    # [4] 1.1 - passage
+    Rails.logger.info(temp_components.inspect)
+
+    return [temp_components[0],[temp_components[1],temp_components[3]].join("."),temp_components[4]]
+  end
+  
+  def to_path
+    path_components = [ self.class::PATH_PREFIX ]
+    temp_components = self.to_components
+    Rails.logger.info("PATH:" + temp_components.inspect)
+    # should give us, e.g.
+    # [0] greekLang - namespace
+    # [1] tlg0012.tlg001 - work
+    # [2] edition or translation
+    # [3] perseus-grc1 - edition + examplar
+    # [4] 1.1 - passage
     cts_ns = temp_components[0]
-    cts_urn = temp_components[1]
-    cts_passage = temp_components[2]
+    cts_urn = temp_components[1] + "." + temp_components[3]
+    cts_passage = temp_components[4]
     
     cts_textgroup,cts_work,cts_edition,cts_exemplar, =
       cts_urn.split('.',4).collect {|x| x.tr(',/','-_')}

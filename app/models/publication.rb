@@ -121,13 +121,16 @@ class Publication < ActiveRecord::Base
           temp_id = identifier_class.new(:name => identifier_string)
           Rails.logger.info("associating identifier #{identifier_string} at #{temp_id.to_path}")
           # make sure we have a path on master before forking it for this publication 
-          unless (self.repository.get_file_from_branch(temp_id.to_path, 'master').blank?)
+          if (self.repository.get_file_from_branch(temp_id.to_path, 'master').blank?)
+            #raise error
+            raise temp_id.to_path + " not found on master"
+          else
             Rails.logger.info("adding identifier to pub #{temp_id}")
             self.identifiers << temp_id
             if self.title == original_title
               self.title = temp_id.titleize
             end
-         end #unless
+          end # if master blank?
         end # do
       end # if
     end # do

@@ -522,14 +522,11 @@ class PublicationsController < ApplicationController
         document_path = [collection, volume, document].join('_')
       end
     elsif identifier_class == 'CTSIdentifier'
-        document_path = urn.sub!(/urn:cts:/,'').tr!(':','/')
-        #if (passage != '')
-        #  document_path += "/#{passage}"
-        #end
+        document_path = CTS::CTSLib.pathForUrn(urn,'edition')
     end
     
     
-    
+    Rails.logger.info("Creating identifiers for #{identifier_class}")
     if (identifier_class == 'CTSIdentifier')
       identifier = document_path
     else
@@ -545,15 +542,13 @@ class PublicationsController < ApplicationController
         # add the identifier for the full text as well as the passage
         # which will be in the format namespace/edititionurn
         text_identifier = identifier.clone.sub!(/^(.*?\/.*?)\/.*$/,'\1')
-        related_identifiers = [text_identifier, identifier]
-      # Hack for Epigraphy - should really pull in translation and CITE identifiers from CTS Inventory
-      elsif urn =~ /^epigraphy/
-        trans_identifier = identifier.clone.sub!(/grc/,'eng')
-        related_identifiers = [identifier,trans_identifier]
-      # otherwise we're editing an entire text
+        trans_identifier = text_identifier.clone.sub!(/grc/,'eng').sub!(/edition/,'translation')
+        related_identifiers = [text_identifier, trans_identifier, identifier]
       else
+        # Hack -  pull in translation and CITE identifiers from CTS Inventory
+        trans_identifier = identifier.clone.sub!(/grc/,'eng').sub!(/edition/,'translation')
         # TODO - add MODS record??
-        related_identifiers = [identifier]
+        related_identifiers = [identifier,trans_identifier]
       end
     else
       related_identifiers = NumbersRDF::NumbersHelper.identifier_to_identifiers(identifier)

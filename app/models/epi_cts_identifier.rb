@@ -5,7 +5,7 @@ class EpiCTSIdentifier < CTSIdentifier
   
   FRIENDLY_NAME = "Text"
   
-  IDENTIFIER_NAMESPACE = 'epigraphy'
+  IDENTIFIER_NAMESPACE = 'epigraphy_edition'
   
   XML_VALIDATOR = JRubyXML::EpiDocP5Validator
   
