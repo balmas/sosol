@@ -32,6 +32,7 @@ class IdentifiersController < ApplicationController
     @publication = Publication.find(params[:publication_id])
     identifier_type = params[:identifier_type].constantize
     
+    # TODO  we want to pickup additional creation args like language
     @identifier = identifier_type.new_from_template(@publication)
     flash[:notice] = "File created."
     expire_publication_cache

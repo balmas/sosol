@@ -33,7 +33,7 @@ class PassageCtsIdentifiersController < IdentifiersController
       conflicts = []  
       for pubid in @publication.identifiers do 
         
-        if pubid.id_attribute == passage_urn
+        if pubid.urn_attribute == passage_urn
           conflicts << pubid
         end
       end 

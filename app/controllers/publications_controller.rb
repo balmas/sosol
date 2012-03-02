@@ -46,6 +46,8 @@ class PublicationsController < ApplicationController
     end
    if !has_teicts
       @creatable_identifiers.delete("PassageCTSIdentifier")
+      @creatable_identifiers.delete("TeiTransCTSIdentifier")
+
     end
     if !has_hgvmeta
       #cant create text
@@ -62,6 +64,7 @@ class PublicationsController < ApplicationController
     end
     if has_teicts
       @creatable_identifiers.delete("EpiMetaCITEIdentifier")      
+      @creatable_identifiers.delete("PassageCTSIdentifier") # no passages from scratch
     end
     if has_epicts
       @creatable_identifiers.delete("PassageCTSIdentifier")   
@@ -70,10 +73,11 @@ class PublicationsController < ApplicationController
     #TODO - is Biblio needed?
     @creatable_identifiers.delete("HGVBiblioIdentifier")
     
+    @multi_identifiers = ['EpiTransCTSIdentifier','TeiTransCTSIdentifier']
     #only let user create new for non-existing        
     @publication.identifiers.each do |i|
       @creatable_identifiers.each do |ci|
-        if ci == i.class.to_s
+        if (ci == i.class.to_s && ! @multi_identifiers.grep(i.class.to_s))
           @creatable_identifiers.delete(ci)    
         end
       end
@@ -377,7 +381,9 @@ class PublicationsController < ApplicationController
       return
     end
      
+    # TODO why would we be searching for comments on title and not id??
     @all_comments, @xml_only_comments = @publication.get_all_comments(@publication.title.split("/").last)
+
 
     @show_submit = allow_submit?
     

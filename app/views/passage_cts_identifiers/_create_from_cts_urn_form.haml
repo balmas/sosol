@@ -54,7 +54,7 @@
   });
 
 - form_for :passage_cts_identifer, Identifier.new, :url => { :controller => "passage_cts_identifiers", :action => "create" } do |form|
-  = hidden_field_tag 'publication_urn', Publication.find(params[:publication_id]).identifiers.select{|i| i.class == TeiCTSIdentifier}.last.id_attribute
+  = hidden_field_tag 'publication_urn', Publication.find(params[:publication_id]).identifiers.select{|i| i.class == TeiCTSIdentifier}.last.urn_attribute
   = hidden_field_tag 'start_passage_level', '1'
   = hidden_field_tag 'end_passage_level', '1'
   = label_tag 'Select a starting passage:'

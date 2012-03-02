@@ -1,7 +1,7 @@
 class PassageCTSIdentifier < CTSIdentifier   
   
   PATH_PREFIX = 'CTS_XML_PASSAGES'
-  IDENTIFIER_NAMESPACE = 'text_edition_passage'
+  IDENTIFIER_NAMESPACE = 'passage'
   FRIENDLY_NAME = "Passage Text"
   EDIT_ARTIFACT = true
   
@@ -13,6 +13,7 @@ class PassageCTSIdentifier < CTSIdentifier
   
   
   def self.new_from_template(publication,passage_urn)    
+    # TODO we need to pull the pubtype from the parent publication
     new_identifier = self.new(:name => CTS::CTSLib.pathForUrn(passage_urn,'edition'))
     new_identifier.publication = publication
     new_identifier.save!
@@ -23,7 +24,7 @@ class PassageCTSIdentifier < CTSIdentifier
     # TODO inventory should be carried along in identifier from creation as part of the path
     inventory = CTS::CTSLib.getInventory("perseus")
     document = new_identifier.related_text.content
-    passage_xml = CTS::CTSLib.proxyGetPassage(inventory,document,new_identifier.id_attribute,commit_sha) 
+    passage_xml = CTS::CTSLib.proxyGetPassage(inventory,document,new_identifier.urn_attribute,commit_sha) 
     Rails.logger.info("Passage XML:#{passage_xml}")
     new_identifier.set_xml_content(passage_xml, :comment => "extracted passage")    
     return new_identifier
@@ -38,7 +39,7 @@ class PassageCTSIdentifier < CTSIdentifier
     JRubyXML.apply_xsl_transform(
       JRubyXML.stream_from_string(content),
       JRubyXML.stream_from_file(File.join(RAILS_ROOT,
-        %w{data xslt cts validate_passage.xsl})))
+        %w{data xslt cts validate_teia.xsl})))
   end
   
   
@@ -57,6 +58,18 @@ class PassageCTSIdentifier < CTSIdentifier
       JRubyXML.stream_from_file(File.join(RAILS_ROOT,
         xsl ? xsl : %w{data xslt pn start-div-portlet_perseus.xsl})),
         parameters)
+  end
+  
+  # NOTE not currently called, but should be from publication.tally_votes
+  def result_action_approve
+    # what we want to do:
+    # merge passage back into parent text
+    # send the parent text for review
+    # passage itself doesn't get finalized
+    # archive? the passage
+    self.status = "approved"
+    
+    self.publication.send_to_finalizer
   end
   
 end

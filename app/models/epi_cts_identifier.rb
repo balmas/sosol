@@ -82,7 +82,7 @@ class EpiCTSIdentifier < CTSIdentifier
             %w{data xslt ddb update_header.xsl})),
           :title_text => self.xml_title_text,
           :human_title_text => self.titleize,
-          :filename_text => self.id_attribute,
+          :filename_text => self.urn_attribute,
           :ddb_hybrid_text => self.n_attribute,
           :reprint_from_text => options[:set_dummy_header] ? original.title : '',
           :ddb_hybrid_ref_attribute => options[:set_dummy_header] ? original.n_attribute : ''

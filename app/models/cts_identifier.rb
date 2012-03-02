@@ -53,9 +53,13 @@ class CTSIdentifier < Identifier
     
     return @collection_names_hash
   end
-  def id_attribute
+  
+  def urn_attribute
      return IDENTIFIER_PREFIX + self.to_urn_components.join(":")
-     
+  end
+  
+  def id_attribute
+     return (IDENTIFIER_PREFIX + self.to_urn_components.join("_")).gsub!(/:/,'_')
   end
   
   def n_attribute
@@ -64,7 +68,7 @@ class CTSIdentifier < Identifier
   
   def xml_title_text
     # TODO lookup title
-    self.id_attribute
+    self.urn_attribute
   end
     
   def to_urn_components
@@ -76,8 +80,13 @@ class CTSIdentifier < Identifier
     # [3] perseus-grc1 - edition + examplar
     # [4] 1.1 - passage
     Rails.logger.info(temp_components.inspect)
-
-    return [temp_components[0],[temp_components[1],temp_components[3]].join("."),temp_components[4]]
+    urn_components = []
+    urn_components << temp_components[0]
+    urn_components << [temp_components[1],temp_components[3]].join(".")
+    unless temp_components[4].nil? 
+      urn_components << temp_components[4] 
+    end
+    return urn_components
   end
   
   def to_path

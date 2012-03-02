@@ -23,6 +23,7 @@ class TeiCtsIdentifiersController < IdentifiersController
   ## CITEIndexIdentifier
   
   def edit
+    # TODO should offer choice to export xml, select a passage, create a translation, etc. 
     redirect_to :action =>"editxml",:id=>params[:id]
   end
   

@@ -1,6 +1,6 @@
 class Identifier < ActiveRecord::Base
   #TODO - is Biblio needed?
-  IDENTIFIER_SUBCLASSES = %w{ PassageCTSIdentifier TeiCTSIdentifier EpiCTSIdentifier EpiTransCTSIdentifier EpiMetaCITEIdentifier DDBIdentifier HGVMetaIdentifier HGVTransIdentifier HGVBiblioIdentifier }
+  IDENTIFIER_SUBCLASSES = %w{ PassageCTSIdentifier TeiCTSIdentifier TeiTransCTSIdentifier EpiCTSIdentifier EpiTransCTSIdentifier EpiMetaCITEIdentifier DDBIdentifier HGVMetaIdentifier HGVTransIdentifier HGVBiblioIdentifier }
   
   FRIENDLY_NAME = "Base Identifier"
   
@@ -109,8 +109,8 @@ class Identifier < ActiveRecord::Base
   
   def titleize
     title = nil
-    if (self.class == EpiCTSIdentifier || self.class == EpiTransCTSIdentifier) && (self.name =~ /#{self.class::TEMPORARY_COLLECTION}/)
-        self.name
+    if (self.class.superclass == CTSIdentifier || self.class.superclass.superclass == CTSIdentifier) 
+        title = self.name
     elsif self.class == HGVMetaIdentifier || self.class == HGVBiblioIdentifier
       title = NumbersRDF::NumbersHelper::identifier_to_title(self.name)
     elsif self.class == HGVTransIdentifier
@@ -141,8 +141,6 @@ class Identifier < ActiveRecord::Base
          if self.respond_to?("is_reprinted?") && self.is_reprinted?
            title += " (reprinted)"
          end
-      elsif (self.class == EpiCTSIdentifier) || (self.class == EpiTransCTSIdentifier) || (self.class == PassageCTSIdentifier) || (self.class == TeiCTSIdentifier)
-        title = self.name
       else # HGV with no name
         title = "HGV " + self.name.split('/').last.tr(';',' ')
       end

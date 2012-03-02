@@ -1048,11 +1048,18 @@ class Publication < ActiveRecord::Base
     all_built_comments = []
     xml_only_built_comments = []
     # select all comments associated with a publication title - will include from all users
+    # BMA TODO switched to by id, figure out if there was a reason for limiting to the title??
+    #@arcomments = Comment.find_by_sql("SELECT a.comment, a.user_id, a.identifier_id, a.reason, a.created_at 
+    #                                     FROM comments a, publications b 
+    #                                    WHERE b.title = '#{title}'
+    #                                      AND a.publication_id = b.id
+    #                                 ORDER BY a.created_at DESC")
     @arcomments = Comment.find_by_sql("SELECT a.comment, a.user_id, a.identifier_id, a.reason, a.created_at 
                                          FROM comments a, publications b 
-                                        WHERE b.title = '#{title}'
+                                        WHERE a.publication_id = #{self.id}
                                           AND a.publication_id = b.id
                                      ORDER BY a.created_at DESC")
+    # add comments hash to array
     # add comments hash to array
     @arcomments.each do |c|
       built_comment = Comment::CombineComment.new
