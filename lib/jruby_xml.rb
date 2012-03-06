@@ -55,6 +55,7 @@ module JRubyXML
     attr_reader :verifier_factory, :schema
     
     def validate(input_source_xml_stream)
+      Rails.logger.info("Verifying with #{@schema}")
       verifier = @schema.newVerifier()
       verifier.setErrorHandler(ParseErrorHandler.new())
       verifier.verify(input_source_xml_stream)
@@ -68,6 +69,16 @@ module JRubyXML
           "http://relaxng.org/ns/structure/1.0")
       @schema = verifier_factory.compileSchema(
         "https://raw.github.com/CDRH/abbot/master/resources/target/tei-xl.rng")
+    end
+  end
+  
+  class TEIAPSGValidator < JARVValidator
+    def initialize
+      @verifier_factory = 
+        org.iso_relax.verifier.VerifierFactory.newInstance(
+          "http://relaxng.org/ns/structure/1.0")
+      @schema = verifier_factory.compileSchema(
+        "data/templates/tei-xl-psg.rng")
     end
   end
   

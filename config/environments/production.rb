@@ -43,4 +43,5 @@ REPOSITORY_ROOT = '/usr/local/gitrepos'
 CANONICAL_REPOSITORY = File.join(REPOSITORY_ROOT, 'canonical.git')
 XSUGAR_STANDALONE_URL="http://localhost:9999/"
 XSUGAR_STANDALONE_USE_PROXY="true"
+EXIST_STANDALONE_URL="http://localhost:8800"
 require File.join(File.dirname(__FILE__), 'production_secret')

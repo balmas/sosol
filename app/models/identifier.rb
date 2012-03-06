@@ -66,6 +66,7 @@ class Identifier < ActiveRecord::Base
     if content.nil?
       content = self.content
     end
+      Rails.logger.info("Validating for class #{self.class}")
     self.class::XML_VALIDATOR.instance.validate(
       JRubyXML.input_source_from_string(content))
   end
@@ -348,7 +349,7 @@ class Identifier < ActiveRecord::Base
   def result_action_approve
    
     self.status = "approved"
-    self.publication.send_to_finalizer
+    #self.publication.send_to_finalizer
   end
   
   def result_action_reject

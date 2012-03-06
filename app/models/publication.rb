@@ -536,6 +536,10 @@ class Publication < ActiveRecord::Base
        self.owner.send_status_emails("approved", self)
       # @publication.send_status_emails(decree_action)          
       
+      identifiers.each do |identifier| 
+        identifier.result_action_approve
+      end
+      
       #set up for finalizing
       self.send_to_finalizer
       

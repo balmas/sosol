@@ -8,7 +8,8 @@
   }
   function get_passage_urns(a_urn,a_level,a_type)
   {
-      var request_url = '/cts_proxy/validreffs?inventory=perseussosol&urn=' + a_urn + 
+      prefix = "#{url_for(:controller => 'cts_proxy', :only_path => true)}"
+      var request_url = prefix + '/validreffs?inventory=perseussosol&urn=' + a_urn + 
       '&level=' + a_level;
       new Ajax.Request(request_url, {
         method: 'get',

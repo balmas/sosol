@@ -48,4 +48,5 @@ config.action_mailer.smtp_settings =
 # and possibly other unversioned secrets for development
 XSUGAR_STANDALONE_URL="http://localhost:9999/"
 XSUGAR_STANDALONE_USE_PROXY="true"
+EXIST_STANDALONE_URL="http://localhost:8080"
 require File.join(File.dirname(__FILE__), 'development_secret')

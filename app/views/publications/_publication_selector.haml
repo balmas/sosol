@@ -5,9 +5,9 @@
   function get_collection_prefix() {
     // TODO support other domains here -- e.g perseus.org?
     //prefix = get_proxy_prefix() + "#{request.domain == 'papyri.info' ? '' : '/papyri.info'}";
-    prefix = '';
+    prefix =  "#{url_for(:controller => 'cts_proxy', :only_path => true)}";
     if($F('IdentifierClass') == 'CTSIdentifier') {
-      return prefix + '/cts_proxy/editions?inventory=' + $F('CTSIdentifierCollectionSelect');
+      return prefix + '/editions?inventory=' + $F('CTSIdentifierCollectionSelect');
     }
   }
   function reset_selector(select_element) {

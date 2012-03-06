@@ -5,7 +5,7 @@ class PassageCTSIdentifier < CTSIdentifier
   FRIENDLY_NAME = "Passage Text"
   EDIT_ARTIFACT = true
   
-  XML_VALIDATOR = JRubyXML::TEIAValidator
+  XML_VALIDATOR = JRubyXML::TEIAPSGValidator
   
   def related_text
     self.publication.identifiers.select{|i| i.class == TeiCTSIdentifier}.last
@@ -31,17 +31,21 @@ class PassageCTSIdentifier < CTSIdentifier
   end
     
   def before_commit(content)
-    Rails.logger.info("Before commit content =" + content)
-    PassageCTSIdentifier.preprocess(content)
+    #begin
+    #  PassageCTSIdentifier.preprocess(content)
+    #rescue
+    #  raise "Invalid Passage XML"
+    #else
+      return content
+    #end
   end
   
   def self.preprocess(content)
     JRubyXML.apply_xsl_transform(
       JRubyXML.stream_from_string(content),
       JRubyXML.stream_from_file(File.join(RAILS_ROOT,
-        %w{data xslt cts validate_teia.xsl})))
+        %w{data xslt cts validate_passage.xsl})))
   end
-  
   
   # Override REXML::Attribute#to_string so that attributes are defined
   # with double quotes instead of single quotes
@@ -50,7 +54,7 @@ class PassageCTSIdentifier < CTSIdentifier
       %Q[#@expanded_name="#{to_s().gsub(/"/, '&quot;')}"]
     end
   ^ )
-  
+ 
   
   def preview parameters = {}, xsl = nil
     JRubyXML.apply_xsl_transform(
@@ -67,9 +71,13 @@ class PassageCTSIdentifier < CTSIdentifier
     # send the parent text for review
     # passage itself doesn't get finalized
     # archive? the passage
-    self.status = "approved"
-    
-    self.publication.send_to_finalizer
+
+    # TODO inventory should be carried along in identifier from creation as part of the path
+    inventory = CTS::CTSLib.getInventory("perseus")
+    document = self.related_text.content
+    updated = CTS::CTSLib.proxyPutPassage(self.content,inventory,self.related_text.content,self.urn_attribute,get_recent_commit_sha())
+    self.related_text.set_xml_content(updated,:comment =>'merged updated passage #{self.urn_attribute}') 
+    self.status = "archived"
   end
   
 end

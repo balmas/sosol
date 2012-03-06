@@ -19,6 +19,7 @@
   <!-- ||||||||||||||    EXCEPTIONS     |||||||||||||| -->
   <!-- ||||||||||||||||||||||||||||||||||||||||||||||| -->
 
+  <!-- TODO kill the encodingDesc for now ... need to get this working for TEIA -->
   <xsl:template match="tei:encodingDesc"/>
   
   <xsl:template match="processing-instruction('oxygen')">

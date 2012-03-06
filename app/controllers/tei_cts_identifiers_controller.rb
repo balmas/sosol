@@ -23,8 +23,12 @@ class TeiCtsIdentifiersController < IdentifiersController
   ## CITEIndexIdentifier
   
   def edit
-    # TODO should offer choice to export xml, select a passage, create a translation, etc. 
-    redirect_to :action =>"editxml",:id=>params[:id]
+    find_identifier
+    # Redirecting to Publication because don't want to immediately show them
+    # the full XML - instead from Publication they can select a passage, etc.
+    publication = @identifier.publication.id
+     redirect_to polymorphic_path([@identifier.publication],
+                                     :action => :show)
   end
   
   # GET /publications/1/passage_cts_identifiers/1/edit
