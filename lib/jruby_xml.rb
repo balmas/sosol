@@ -68,7 +68,7 @@ module JRubyXML
         org.iso_relax.verifier.VerifierFactory.newInstance(
           "http://relaxng.org/ns/structure/1.0")
       @schema = verifier_factory.compileSchema(
-        "https://raw.github.com/CDRH/abbot/master/resources/target/tei-xl.rng")
+        "http://dev.alpheios.net:8008/teia/tei-xl.rng")
     end
   end
   
@@ -78,7 +78,7 @@ module JRubyXML
         org.iso_relax.verifier.VerifierFactory.newInstance(
           "http://relaxng.org/ns/structure/1.0")
       @schema = verifier_factory.compileSchema(
-        "data/templates/tei-xl-psg.rng")
+        "http://dev.alpheios.net:8008/teia/tei-xl-psg.rng")
     end
   end
   

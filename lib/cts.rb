@@ -6,6 +6,7 @@ module CTS
   CTS_NAMESPACE = "http://chs.harvard.edu/xmlns/cts3/ti"
   EXIST_HELPER_REPO = "#{EXIST_STANDALONE_URL}/exist/rest/db/xq/CTS.xq?"
   EXIST_HELPER_REPO_PUT = "#{EXIST_STANDALONE_URL}/exist/rest"
+  CATALOG_SEARCH = "http://catalog.perseus.tufts.edu/perseus.org/xc/search/"
   
   module CTSLib
     class << self
@@ -188,6 +189,13 @@ headers)
          #  Net::HTTP.get_response(
          #       "#{EXIST_HELPER_REPO}&request=removeInventory&inv=#{invid}")
          # return passage
+      end
+      
+      def get_catalog_url(a_identifier) 
+        # TODO fix catalog to support full, escaped url
+        # for POC just use the work and edition
+        searchid = a_identifier.to_urn_components[0] + "." + a_identifier.to_urn_components[1]
+        return CATALOG_SEARCH + searchid
       end
       
     end #class

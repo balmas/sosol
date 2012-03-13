@@ -4,13 +4,18 @@
     xmlns:cts="http://chs.harvard.edu/xmlns/cts3">
     
     <xsl:output method="text"/>
+    
+    <xsl:variable name="requestUrn" select="//cts:requestUrn"/>
+    
     <xsl:template match="/">
        <xsl:apply-templates select="//cts:urn"/>
     </xsl:template>
     
     <xsl:template match="cts:urn">
-        <xsl:message><xsl:value-of select="."/></xsl:message>
-        <xsl:value-of select="concat(translate(.,',','__'),',')"/>
+        <!-- TODO we need to do pipe separated because epi urns have commas -->
+        <xsl:if test=". != $requestUrn">
+            <xsl:value-of select="concat(translate(.,',','__'),',')"/>
+        </xsl:if>  
     </xsl:template>
     
     <xsl:template match="*">

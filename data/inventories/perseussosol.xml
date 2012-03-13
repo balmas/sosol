@@ -13,7 +13,7 @@
             <edition projid="greekLang:perseus-grc1">
                 <label xml:lang="eng">Iliad</label>
                 <online docname="/db/repository/greekLang/tlg0012/tlg001/tlg0012.tlg001.perseus-grc1.xml">
-                    <validate schema="documentschema.rng"/>
+                    <validate schema="tei-xl.rng"/>
                     <namespaceMapping abbreviation="tei" nsURI="http://www.tei-c.org/ns/1.0"/>
                     <citationMapping>
                         <citation label="Book" xpath="/tei:div[@n='?']" scope="/tei:TEI/tei:text/tei:body">
@@ -28,12 +28,50 @@
             <edition projid="greekLang:perseus-grc1">
                 <label xml:lang="eng">Odyssey</label>
                 <online docname="/db/repository/greekLang/tlg0012/tlg001/tlg0012.tlg002.perseus-grc1.xml">
-                    <validate schema="documentschema.rng"/>
+                    <validate schema="tei-xl.rng"/>
                     <namespaceMapping abbreviation="tei" nsURI="http://www.tei-c.org/ns/1.0"/>
                     <citationMapping>
                         <citation label="Book" xpath="/tei:div[@n='?']" scope="/tei:TEI/tei:text/tei:body">
                             <citation label="Line" xpath="/tei:l[@n='?']" scope="/tei:TEI/tei:text/tei:body/tei:div[@n='?']"/>
                         </citation>
+                    </citationMapping>
+                </online>
+            </edition>
+        </work>
+    </textgroup>
+    <textgroup projid="greekLang:tlg0532">
+        <groupname xml:lang="en">Achilles Tatius</groupname>
+        <work projid="greekLang:tlg001">
+            <title xml:lang="eng">Leucippe and Clitophon</title>
+            <edition projid="greekLang:perseus-grc1">
+                <label xml:lang="eng">The loves of Clitopho and Leucippe</label>
+                <online docname="/db/repository/greekLang/tlg0532/tlg001/tlg0532.tlg001.perseus-grc1.xml">
+                    <validate schema="tei-xl.rng"/>
+                    <namespaceMapping abbreviation="tei" nsURI="http://www.tei-c.org/ns/1.0"/>
+                    <citationMapping>
+                        <citation label="Book" xpath="/tei:div[@n='?']" scope="/tei:TEI/tei:text/tei:body">
+                            <citation label="Chapter" xpath="/tei:div[@n='?']" scope="/tei:TEI/tei:text/tei:body/tei:div[@n='?']">
+                                <citation label="Section" xpath="/tei:div[@n='?']" scope="/tei:TEI/tei:text/tei:body/tei:div[@n='?']/tei:div[@n='?']"/>
+                                </citation>
+                        </citation>
+                    </citationMapping>
+                </online>
+            </edition>
+        </work>
+    </textgroup>
+    <textgroup projid="greekLang:tlg4081">
+        <groupname xml:lang="en">Colluthus of Lycopolis</groupname>
+        <work projid="greekLang:tlg001">
+            <title xml:lang="en">Raptio Helenae</title>
+            <edition projid="greekLang:perseus-grcX1">
+                <label xml:lang="en">Rape of Helen</label>
+                <online docname="/db/repository/greekLang/tlg4081/tlg001/tlg4081.tlg001.perseus-grcX1.xml">
+                    <validate schema="tei-xl.rng"/>
+                    <namespaceMapping abbreviation="tei" nsURI="http://www.tei-c.org/ns/1.0"/>
+                    <citationMapping>
+                        <citation label="Book" xpath="/tei:div[@n='?']" scope="/tei:TEI/tei:text/tei:body">
+                            <citation label="Line" xpath="/tei:div[@n='?']" scope="/tei:TEI/tei:text/tei:body/tei:div[@n='?']"/>
+                         </citation>                    
                     </citationMapping>
                 </online>
             </edition>

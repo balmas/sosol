@@ -59,6 +59,7 @@ class CTSIdentifier < Identifier
   end
   
   def id_attribute
+     # TODO figure out best way to handle urn as id attribute (: not allowed)
      return (IDENTIFIER_PREFIX + self.to_urn_components.join("_")).gsub!(/:/,'_')
   end
   

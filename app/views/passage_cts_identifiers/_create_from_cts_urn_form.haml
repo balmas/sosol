@@ -29,9 +29,12 @@
   function populate_selector(options,a_level,a_type) {
     var select_element =  $(a_type + '_passage_select_' + a_level);
     var last_element = $(a_type + '_passage_select_' + (a_level-1));
-    if (select_element == null && last_element != null && options.length > 0)
+    // TODO the check on options length should really be 0 but the xslt is added an extra
+    // end separator which is bringing in an empty element
+    if ( select_element == null  && 
+         last_element != null && options.length > 1)
     {
-      var insert = '<select name="' + 
+      var insert = '<select onchange="get_next_level(this,\'' + a_type + '\');" name="' + 
         a_type + '_passage_select_'+ a_level + '" id="' + 
         a_type + '_passage_select_' + a_level +'"></select>';
       new Insertion.After(last_element,insert);
