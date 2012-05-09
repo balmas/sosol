@@ -1,4 +1,4 @@
-= render :partial => "common/flash_all"
+-# render :partial => "common/flash_all"
 %h1 Start A Publication
 
 .advanced_create
@@ -10,6 +10,10 @@
   %p
     Create a new publication record and text.
     = render :partial => "publications/create_from_templates_form"
+  %p
+    Create a new biblio record.
+    = render :partial => "publications/create_from_biblio_template_form"
+
 .advanced_create
   %h3 From PN ID
   %p A PN ID example is "papyri.info/ddbdp/bgu;7;1510" or "urn:cts:epigraphy.perseus.org.igvii.2543-2545.perseus-grc1"

@@ -1,15 +1,26 @@
 #main
   - max_visible_comments = 10
   :javascript 
+
     function checkForComment() { 
       comment_text = $('submit_comment').value; 
+      // FORK CHANGE START interface
       if ($('reason_dataentry').checked) {
         comment_text = comment_text + "Data Entry Error\n";
       }
       if ($('reason_xmladded').checked) {
         comment_text = comment_text + "XML Markup Change\n";
       }
-      $('submit_button').disabled = comment_text.replace(/^\s+|\s+$/g, '') == ""; 
+      // FORK CHANGE END interface
+      if ($('community_id') != null)
+      {
+        var selected_submit = $('community_id').value;
+        $('submit_button').disabled = (selected_submit == "")  ||  ( comment_text.replace(/^\s+|\s+$/g, '') == "" )
+      }
+      else
+      {
+        $('submit_button').disabled = ( comment_text.replace(/^\s+|\s+$/g, '') == "" )
+      } 
     }
     
     function fixupComment() {
@@ -33,14 +44,14 @@
         el.style.display = '';
       }
     }
-  = render :partial => 'identifiers/edit_bar'
+  =# render :partial => 'identifiers/edit_bar'
   .site
     %h2 
       = @publication.title
       - if !@publication.status.nil? && @publication.status != ''
         == (#{@publication.status})
       
-    = render :partial => "common/flash_all"    
+    -# render :partial => "common/flash_all"    
 
     - if %w{new editing}.include?(@publication.status)
       #submit
@@ -54,7 +65,9 @@
                   %li
                     = "#{identifier.title} (#{identifier.class::FRIENDLY_NAME  })"
             They will be submitted to the proper boards for review.
+            // FORK CHANGE START interface
             - form_tag(  {:controller => 'publications',:action => "submit"}, {:onsubmit => 'fixupComment(event);'})  do
+              -#= hidden_field_tag 'community_id'
               You will no longer be able to edit any of the items in this the publication once it is submitted. 
               %br
               %br
@@ -66,10 +79,23 @@
               %br
               %input{ :type => "checkbox", :onclick => "checkForComment(event)", :class => "rend_frac_check_c", :name => "reason_other", :id => "reason_other", :value => "render", :enabled => "true" }Other:
               %br
-              = text_area_tag 'submit_comment', "", :onkeyup => "checkForComment(event)", :cols => 70, :rows => 4
+              = text_area_tag 'submit_comment', "", :onkeyup => "checkForComment()", :cols => 70, :rows => 4
               %br
               %br
               = submit_tag "Submit to Boards", :disabled => true, :class => 'submit', :id => "submit_button"
+              
+              - if @current_user.community_memberships.count > 0
+                - community_hash = Hash.new
+                - community_hash["SOSOL"] = 0
+                - @current_user.community_memberships.each do |community|
+                
+                  - if community.is_submittable? #check to see that we can submit to community
+                    - community_hash[community.format_name] = community.id
+                  -#= submit_tag "Submit to " + community.friendly_name + " Boards", :disabled => true, :class => 'submit', :onclick => "setCommunityId(\'" + community.id.to_s + "\')"
+                = select "community", "id", community_hash, {:include_blank => true } ,{ :onchange => 'checkForComment()' }
+                
+                        
+                
         - else
           %b
             Publication may not be submitted at this time.
@@ -168,6 +194,13 @@
      
         %br
 
+
+    - if @publication.allow_user_withdrawal?(@current_user)
+      %br
+      -#= button_to "Withdraw from Editorial Review",  :controller => 'publications', :id => @publication.id, :action => "withdraw"
+      = button_to("Withdraw from Editorial Review", options = {:controller => 'publications', :id => @publication.id, :action => "withdraw"}, html_options = {:class => "submit"})
+      %br
+      
     - if @allow_delete
       = link_to "Delete", :controller => 'publications', :id => @publication.id, :action => "confirm_delete"
       %br
@@ -182,3 +215,6 @@
     - if @current_user.developer  
       = link_to "developer immediate delete", @publication, :method => :delete 
       %br
+    
+    - if %w{new editing submitted approved voting committed}.include? @publication.status
+      = link_to "Download Copy", :controller => 'publications', :id => @publication.id, :action => "download"

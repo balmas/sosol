@@ -1,89 +1,54 @@
 class PublicationsController < ApplicationController
-  layout 'site'
+  ##layout 'site'
   before_filter :authorize
   before_filter :ownership_guard, :only => [:confirm_archive, :archive, :confirm_withdraw, :withdraw, :confirm_delete, :destroy, :submit]
   
   def new
   end
   
+  def download
+  
+    require 'zip/zip'
+    require 'zip/zipfilesystem'
+      
+    @publication = Publication.find(params[:id])
+    
+    
+    file_friendly_name = @publication.title.gsub(/[\\\/:."*?<>|\s]+/, "-")
+   # raise file_friendly_name
+    t = Tempfile.new("publication_download_#{file_friendly_name}-#{request.remote_ip}")
+    
+    Zip::ZipOutputStream.open(t.path) do |zos|
+        @publication.identifiers.each do |id|
+          #raise id.title + " ... " + id.name + " ... " + id.title.gsub(/\s/,'_')
+          
+          #simple paths for just this pub
+          zos.put_next_entry( id.class::FRIENDLY_NAME + "-" + id.title.gsub(/\s/,'_') + ".xml")
+          
+          #full path as used in repo
+          #zos.put_next_entry( id.to_path)
+          
+          zos << id.xml_content
+        end 
+    end    
+    
+    # End of the block  automatically closes the zip? file.
+   
+    # The temp file will be deleted some time...
+    
+    filename = @publication.creator.name + "_" + file_friendly_name + "_" + Time.now.strftime("%a%d%b%Y_%H%M")
+    filename = filename.gsub(/[\\\/:."*?<>|\s]+/, "-") + ".zip"
+    #raise filename
+    send_file t.path, :type => 'application/zip', :disposition => 'attachment', :filename => filename
+  
+    t.close
+  end
+  
+
+  
  
   def determine_creatable_identifiers
-    @creatable_identifiers = Array.new(Identifier::IDENTIFIER_SUBCLASSES)
-    
-    #WARNING hardcoded identifier depenency hack  
-    #enforce creation order
-    # for now, never create new TEI texts -- will add ability later
-    @creatable_identifiers.delete("TeiCTSIdentifier")      
-    has_hgvmeta = false
-    has_citemeta = false
-    has_ddbtext = false
-    has_epicts = false
-    has_teicts = false
-    @publication.identifiers.each do |i|
-      if i.class.to_s == "HGVMetaIdentifier"
-        has_hgvmeta = true
-      end
-      if i.class.to_s == "EpiMetaCITEIdentifier"
-        has_citemeta = true
-      end
-      if i.class.to_s == "DDBIdentifier"
-       has_ddbtext = true
-      end
-      if i.class.to_s == "EpiCTSIdentifier"
-       has_epicts = true
-      end
-      if i.class.to_s == "TeiCTSIdentifier"
-       has_teicts = true
-      end
-
-    end
-    if !has_ddbtext
-      #cant create trans
-      @creatable_identifiers.delete("HGVTransIdentifier")      
-    end
-    if !has_epicts
-      @creatable_identifiers.delete("EpiTransCTSIdentifier")
-    end
-   if !has_teicts
-      @creatable_identifiers.delete("PassageCTSIdentifier")
-      @creatable_identifiers.delete("TeiTransCTSIdentifier")
-
-    end
-    if !has_hgvmeta
-      #cant create text
-      @creatable_identifiers.delete("DDBIdentifier")
-      #cant create trans
-      @creatable_identifiers.delete("HGVTransIdentifier")
-    end
-    if !has_citemeta
-       @creatable_identifiers.delete("EpiCTSIdentifier")
-       @creatable_identifiers.delete("EpiTransCTSIdentifier")  
-       @creatable_identifiers.delete("HGVMetaIdentifier")          
-    else
-      @creatable_identifiers.delete("HGVMetaIdentifier")
-    end
-    if has_teicts
-      @creatable_identifiers.delete("EpiMetaCITEIdentifier")      
-      @creatable_identifiers.delete("PassageCTSIdentifier") # no passages from scratch
-    end
-    if has_epicts
-      @creatable_identifiers.delete("PassageCTSIdentifier")   
-    end
-    
-    #TODO - is Biblio needed?
-    @creatable_identifiers.delete("HGVBiblioIdentifier")
-    
-    @multi_identifiers = ['EpiTransCTSIdentifier','TeiTransCTSIdentifier']
-    #only let user create new for non-existing        
-    @publication.identifiers.each do |i|
-      @creatable_identifiers.each do |ci|
-        if (ci == i.class.to_s && ! @multi_identifiers.grep(i.class.to_s))
-          @creatable_identifiers.delete(ci)    
-        end
-      end
-    end  
-    
-    
+    @creatable_identifiers = @publication.creatable_identifiers
   end
 
   def advanced_create()
@@ -135,10 +100,31 @@ class PublicationsController < ApplicationController
     publication_from_identifier(identifier, related_identifiers)
   end
 
+  def create_from_biblio_template
+    new_publication = Publication.new(:owner => @current_user, :creator => @current_user)
+    
+    # fetch a title without creating from template
+    new_publication.title = BiblioIdentifier.new(:name => BiblioIdentifier.next_temporary_identifier).titleize
+    
+    new_publication.status = "new"
+    new_publication.save!
+    
+    # branch from master so we aren't just creating an empty branch
+    new_publication.branch_from_master
+    
+    #create the required meta data and transcriptions
+    new_biblio = BiblioIdentifier.new_from_template(new_publication)
+    @publication = new_publication
+
+    flash[:notice] = 'Publication was successfully created.'
+    expire_publication_cache
+    redirect_to @publication
+  end
+
   def create_from_templates
     @publication = Publication.new_from_templates(@current_user)
-    
-    # need to remove repeat against publication model
+   
+    # create event
     e = Event.new
     e.category = "created"
     e.target = @publication
@@ -166,28 +152,28 @@ class PublicationsController < ApplicationController
     #check that the list is in the correct form
     #clean up the ids
     id_list.map! do |id|
-      id.chomp!('/');
-      pos = id.index('papyri.info');
-      if pos
-        id = id[pos..id.length-1]
-      end
-      #check if there is a good response from the number server
-      response =  NumbersRDF::NumbersHelper.identifier_to_numbers_server_response(id)
-      
-      #puts id + " returned " + response.code # + response.body
-      if response.code != '200'
+      # FIXME: once biblio is loaded into numbers server, remove this unless clause
+      unless id =~ /#{NumbersRDF::NAMESPACE_IDENTIFIER}\/#{BiblioIdentifier::IDENTIFIER_NAMESPACE}/
+        id.chomp!('/');
+        id = NumbersRDF::NumbersHelper.identifier_url_to_identifier(id)
+        #check if there is a good response from the number server
+        response =  NumbersRDF::NumbersHelper.identifier_to_numbers_server_response(id)
         
-        #bad format most likely
-        id = "Numbers Server Error, Check format--> " + id
-        list_is_good = false
-        
-      elsif !response.body.index('rdf:Description')
-        
-        #item does not exist most likely
-        #puts "text is bad"
-        id = "Not Found--> " + id
-        list_is_good = false
-        
+        #puts id + " returned " + response.code # + response.body
+        if response.code != '200'
+          
+          #bad format most likely
+          id = "Numbers Server Error, Check format--> " + id
+          list_is_good = false
+          
+        elsif !response.body.index('rdf:Description')
+          
+          #item does not exist most likely
+          #puts "text is bad"
+          id = "Not Found--> " + id
+          list_is_good = false
+          
+        end
       end
       id
     end
@@ -203,16 +189,44 @@ class PublicationsController < ApplicationController
       return
     end
     
+    
+    #clean up any duplicated lines
+    id_list = id_list.uniq
+    
     publication_from_identifiers(id_list)
   end
 
   def submit
+
     #prevent resubmitting...most likely by impatient clicking on submit button
     if ! %w{editing new}.include?(@publication.status)
       flash[:error] =  'Publication has already been submitted. Did you click "Submit" multiple times?'
       redirect_to @publication
       return
     end
+    
+    #check if we are submitting to a community
+    #community_id = params[:community_id]
+    if params[:community] && params[:community][:id]
+      community_id = params[:community][:id]
+      community_id.strip
+      if !community_id.empty? && community_id != "0" && !community_id.nil?
+        @publication.community_id = community_id
+        Rails.logger.info "Publication " + @publication.id.to_s + " " + @publication.title + " will be submitted to " + @publication.community.format_name
+      else
+        #force community id to nil for sosol
+        @publication.community_id = nil;        
+        Rails.logger.info "Publication " + @publication.id.to_s + " " + @publication.title + " will be submitted to SoSOL"
+      end
+      
+    else
+      #force community id to 0 for sosol
+      @publication.community_id = nil;
+    end
+    
+    
+    #need to set id to 0
+    #raise community_id
     
     #@comment = Comment.new( {:git_hash => @publication.recent_submit_sha, :publication_id => params[:id], :comment => params[:submit_comment], :reason => "submit", :user_id => @current_user.id } )
     #git hash is not yet known, but we need the comment for the publication.submit to add to the changeDesc
@@ -255,21 +269,31 @@ class PublicationsController < ApplicationController
   end
   
   def become_finalizer
-    # TODO make sure we don't steal it from someone who is working on it
-    @publication = Publication.find(params[:id])
-    @publication.remove_finalizer
     
-    #note this can only be called on a board owned publication
-    if @publication.owner_type != "Board"
-      flash[:error] = "Can't change finalizer on non-board copy of publication."
-      redirect_to show
+    @publication = Publication.find(params[:id])
+    
+    if @publication.change_finalizer(@current_user)
+      # TODO make sure we don't steal it from someone who is working on it
+    else
+      #no finalizer exists so pick one
+      #@publication = Publication.find(params[:id])
+      #@publication.remove_finalizer
+      
+      #note this can only be called on a board owned publication
+      if @publication.owner_type != "Board"
+        flash[:error] = "Can't change finalizer on non-board copy of publication."
+        redirect_to show
+      end
+      @publication.send_to_finalizer(@current_user)
+      
     end
-    @publication.send_to_finalizer(@current_user)
-    redirect_to (dashboard_url) #:controller => "publications", :action => "finalize_review" , :id => new_publication_id
+    #redirect_to (dashboard_url) #:controller => "publications", :action => "finalize_review" , :id => new_publication_id
+    redirect_to :controller => 'user', :action => 'dashboard', :board_id => @publication.owner.id
   
   end
   
   def finalize_review
+    
     @publication = Publication.find(params[:id])
     @identifier = nil#@publication.entry_identifier
     #if we are finalizing then find the board that this pub came from 
@@ -286,38 +310,51 @@ class PublicationsController < ApplicationController
     if @diff.blank?
       flash[:error] = "WARNING: Diff from canon is empty. Something may be wrong."
     end
+    @is_editor_view = true
   end
   
+ 
   
   def finalize
     @publication = Publication.find(params[:id])
-    
-    
-    #find identifier so we can set the votes into the xml
-    #@identifier = Identifier.find(params[:identifier_id])
-    #@identifier.update_revision_desc(params[:comment], @current_user)
-    #@identifier.save
+
+    #to prevent a community publication from being finalized if there is no end_user to get the final version
+    if @publication.is_community_publication? && @publication.community.end_user.nil? 
+      flash[:error] = "Error finalizing. No End User for the community."
+      redirect_to @publication
+      return
+    end
     
     #find all modified identiers in the publication so we can set the votes into the xml
     @publication.identifiers.each do |id|
       #board controls this id and it has been modified
-      if id.modified? && @publication.find_first_board.controls_identifier?(id) 
+      if id.modified? && @publication.find_first_board.controls_identifier?(id) && (id.class.to_s != "BiblioIdentifier")
         id.update_revision_desc(params[:comment], @current_user);
         id.save
       end
     end
     
     
-    #do we need to save publication before continuing with commit??
-
-    begin
-      canon_sha = @publication.commit_to_canon
-      expire_publication_cache(@publication.creator.id)
-      expire_fragment(/board_publications_\d+/)
-    rescue Errno::EACCES => git_permissions_error
-      flash[:error] = "Error finalizing. Error message was: #{git_permissions_error.message}. This is likely a filesystems permissions error on the canonical Git repository. Please contact your system administrator."
-      redirect_to @publication
-      return
+    #copy back in any case
+    @publication.copy_back_to_user(params[:comment], @current_user)
+  
+    #if it is a community pub, we don't commit to canon
+    #instead we copy changes back to origin
+    if @publication.is_community_publication?
+      
+      #@publication.copy_back_to_user(params[:comment], @current_user)
+  
+      
+    else #commit to canon
+      begin
+        canon_sha = @publication.commit_to_canon
+        expire_publication_cache(@publication.creator.id)
+        expire_fragment(/board_publications_\d+/)
+      rescue Errno::EACCES => git_permissions_error
+        flash[:error] = "Error finalizing. Error message was: #{git_permissions_error.message}. This is likely a filesystems permissions error on the canonical Git repository. Please contact your system administrator."
+        redirect_to @publication
+        return
+      end    
     end
 
 
@@ -380,8 +417,10 @@ class PublicationsController < ApplicationController
       redirect_to (dashboard_url)
       return
     end
-     
+
+    @is_editor_view = true 
     # TODO why would we be searching for comments on title and not id??
+
     @all_comments, @xml_only_comments = @publication.get_all_comments(@publication.title.split("/").last)
 
 
@@ -434,11 +473,10 @@ class PublicationsController < ApplicationController
 
   def edit_biblio
     @publication = Publication.find(params[:id])
-    @identifier = HGVBiblioIdentifier.find_by_publication_id(@publication.id)
+    @identifier = BiblioIdentifier.find_by_publication_id(@publication.id)
     redirect_to edit_polymorphic_path([@publication, @identifier])
   end
 
- 
   def edit_adjacent
   
     #if they are on show, then need to goto first or last identifers
@@ -624,8 +662,8 @@ class PublicationsController < ApplicationController
       #has_voted = vote_identifier.votes.find_by_user_id(@current_user.id)
       has_voted = @publication.user_has_voted?(@current_user.id)
       if !has_voted 
-        @vote.save!
         @comment.save!
+        @vote.save!
         # invalidate their cache since an action may have changed its status
         expire_publication_cache(@publication.creator.id)
         expire_fragment(/board_publications_\d+/)
@@ -686,6 +724,17 @@ class PublicationsController < ApplicationController
     @publication = Publication.find(params[:id])
     pub_name = @publication.title
     @publication.withdraw
+    
+    #send email to the user informing them of the withdraw
+    #EmailerMailer.deliver_send_withdraw_note(@publication.creator.email, @publication.title )
+    address = @publication.creator.email
+    if address && address.strip != ""
+      begin
+        EmailerMailer.deliver_send_withdraw_note(address, @publication.title )                       
+      rescue Exception => e
+        Rails.logger.error("Error sending withdraw email: #{e.class.to_s}, #{e.to_s}")
+      end
+    end
 
     flash[:notice] = 'Publication ' + pub_name + ' was successfully withdrawn.'
     expire_publication_cache

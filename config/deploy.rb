@@ -1,5 +1,5 @@
 set :application, "protosite"
-set :repository,  "ssh://halsted.vis.uky.edu/srv/git/protosite.git"
+set :repository,  "git://github.com/papyri/sosol.git"
 set :scm, "git"
 set :user, "idp2"
 set :scm_verbose, true
@@ -65,7 +65,7 @@ task :after_update_code, :roles => :app do
   secret_config = "#{shared_path}/config/environments/production_secret.rb"
   run "cp #{secret_config} #{release_path}/config/environments/production_secret.rb"
   
-  run "cp #{shared_path}/config/initializers/hoptoad.rb #{release_path}/config/initializers/hoptoad.rb"
+  run "cp #{shared_path}/config/initializers/airbrake.rb #{release_path}/config/initializers/airbrake.rb"
 end
 
 namespace :gems do

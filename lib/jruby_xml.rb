@@ -81,6 +81,16 @@ module JRubyXML
         "http://dev.alpheios.net:8008/teia/tei-xl-psg.rng")
     end
   end
+
+ class RDFValidator < JARVValidator
+    def initialize
+      @verifier_factory = 
+        org.iso_relax.verifier.VerifierFactory.newInstance(
+          "http://relaxng.org/ns/structure/1.0")
+      @schema = verifier_factory.compileSchema(
+    "http://www.w3.org/TR/rdf-syntax-grammar/rdfxml.rng")
+    end
+  end 
   
   class EpiDocP5Validator < JARVValidator
     def initialize
@@ -88,7 +98,7 @@ module JRubyXML
         org.iso_relax.verifier.VerifierFactory.newInstance(
           "http://relaxng.org/ns/structure/1.0")
       @schema = verifier_factory.compileSchema(
-        "http://epidoc.svn.sourceforge.net/viewvc/epidoc/trunk/schema/tei-epidoc.rng")
+        "http://www.stoa.org/epidoc/schema/8.9/tei-epidoc.rng")
     end
   end
   

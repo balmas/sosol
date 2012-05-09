@@ -48,17 +48,24 @@
       <xsl:apply-templates/>
     </xsl:copy>
   </xsl:template>
+
+  <!-- convert <lb type='inWord'/> to <lb break='no'/> -->
+  <!-- from http://idp.atlantides.org/svn/idp/idp.optimization/trunk/xslt/inWord2breakNo.xsl -->
+  <!-- set to priority 1 so it happens before id generation, which the apply-templates should call -->
+  <xsl:template match="tei:lb[@type='inWord']" priority="1">
+    <xsl:element name="lb" namespace="http://www.tei-c.org/ns/1.0">
+      <xsl:copy-of select="@*[not(local-name()='type')]"/>
+      <xsl:attribute name="break">
+        <xsl:text>no</xsl:text>
+      </xsl:attribute>
+      <xsl:apply-templates/>
+    </xsl:element>
+  </xsl:template>
   
   <!-- generate lb id's when saving commentary -->
   <xsl:template match="tei:lb">
-    <!-- count all preceding lb's before current lb's div - 0 if no div textparts -->
-    <xsl:variable name="preced-lb">
-      <xsl:value-of select="count(preceding::*/*//tei:lb)"/>
-    </xsl:variable>
     <xsl:variable name="lb-id">
-      <xsl:call-template name="generate-lb-id">
-        <xsl:with-param name="preced-div-lb" select="$preced-lb"/>
-      </xsl:call-template>
+      <xsl:call-template name="generate-lb-id"/>
     </xsl:variable>
     
     <xsl:copy>
@@ -111,6 +118,9 @@
   <xsl:template match="tei:profileDesc">
     <xsl:copy>
       <xsl:apply-templates select="@*|node()"/>
+      <xsl:if test="//*[@xml:lang] and not(tei:langUsage)">
+        <xsl:call-template name="generate-languages"/>
+      </xsl:if>
       <xsl:if test="//tei:handShift and not(tei:handNotes)">
         <xsl:call-template name="generate-handnotes"/>
       </xsl:if>
@@ -125,6 +135,45 @@
             <xsl:value-of select="@new"/>
           </xsl:attribute>
         </xsl:element>
+      </xsl:for-each-group>
+    </xsl:element>
+  </xsl:template>
+  
+  <!-- generate langUsage from xml:lang's present in the document -->
+  <xsl:template match="tei:langUsage">
+    <xsl:call-template name="generate-languages"/>
+  </xsl:template>
+  
+  <xsl:template name="generate-languages">
+    <xsl:variable name="languages" select="document('sosol_langs.xml')"/>
+    <xsl:element name="langUsage" namespace="http://www.tei-c.org/ns/1.0">
+      <!-- for each language present in the document -->
+      <xsl:for-each-group select="//*[@xml:lang]" group-by="@xml:lang">
+        <xsl:variable name="language" select="@xml:lang"/>
+        <xsl:choose>
+          <!-- this language code is in the language list, copy it -->
+          <xsl:when test="$languages//language[@ident = $language]">
+            <xsl:element name="language" namespace="http://www.tei-c.org/ns/1.0">
+              <xsl:attribute name="ident"><xsl:value-of select="@xml:lang"/></xsl:attribute>
+              <xsl:value-of select="$languages//language[@ident = $language]"/>
+            </xsl:element>
+          </xsl:when>
+          <!-- this language code is not in the language list -->
+          <xsl:otherwise>
+            <xsl:choose>
+              <!-- this language code has a language definition in the document, copy it -->
+              <xsl:when test="/tei:TEI/tei:teiHeader/tei:profileDesc/tei:langUsage/tei:language[@ident = $language]">
+                <xsl:copy-of select="/tei:TEI/tei:teiHeader/tei:profileDesc/tei:langUsage/tei:language[@ident = $language]"/>
+              </xsl:when>
+              <!-- this language code doesn't have a language definition, generate a blank -->
+              <xsl:otherwise>
+                <xsl:element name="language" namespace="http://www.tei-c.org/ns/1.0">
+                  <xsl:attribute name="ident"><xsl:value-of select="@xml:lang"/></xsl:attribute>
+                </xsl:element>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:for-each-group>
     </xsl:element>
   </xsl:template>
@@ -154,6 +203,70 @@
         <xsl:text>value</xsl:text>
       </xsl:attribute>
     </xsl:element>
+  </xsl:template>
+
+  <!-- sort changes by @when -->
+  <!-- from http://idp.atlantides.org/svn/idp/idp.optimization/trunk/xslt/app-rationalization.xsl -->
+  <xsl:template match="tei:revisionDesc">
+    <xsl:copy>
+      <xsl:copy-of select="@*"/>
+      <xsl:for-each select="tei:change">
+        <xsl:sort select="@when" order="descending"/>
+        <xsl:text>
+          </xsl:text>
+        <xsl:copy>
+          <!-- change SoSOL user names into URI's -->
+          <!-- from http://idp.atlantides.org/svn/idp/idp.optimization/trunk/xslt/sosol-ids.xsl -->
+          <xsl:copy-of select="@*[not(local-name()='who')]"/>
+          <xsl:attribute name="who">
+            <xsl:choose>
+              <xsl:when test="starts-with(@who,'http://papyri.info/editor/users/')">
+                <xsl:value-of select="@who"/>
+              </xsl:when>
+              <xsl:when test="document('sosol_usernames.xml')//name[(normalize-space(.)=normalize-space(current()/@who))]">
+                <xsl:value-of select="document('sosol_usernames.xml')//name[(normalize-space(.)=normalize-space(current()/@who))]/following-sibling::uri[1]"/>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:value-of select="@who"/>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:attribute>
+          <xsl:apply-templates/>
+        </xsl:copy>
+      </xsl:for-each>
+      <xsl:text>
+      </xsl:text>
+    </xsl:copy>
+  </xsl:template>
+
+  <!-- convert app type=BL|SoSOL to editorial -->
+  <!-- from http://idp.atlantides.org/svn/idp/idp.optimization/trunk/xslt/app-rationalization.xsl -->
+  <xsl:template match="tei:app[@type=('BL','SoSOL')]">
+    <xsl:copy>
+      <xsl:copy-of select="@*[not(local-name()='type')]"/>
+      <xsl:attribute name="type">
+        <xsl:text>editorial</xsl:text>
+      </xsl:attribute>
+      <xsl:apply-templates/>
+    </xsl:copy>
+  </xsl:template>
+
+  <xsl:template match="tei:app[@type=('BL','SoSOL')]/tei:lem">
+    <xsl:copy>
+      <xsl:copy-of select="@*[not(local-name()='resp')]"/>
+      <xsl:attribute name="resp">
+        <xsl:choose>
+          <xsl:when test="parent::tei:app[@type='BL']">
+            <xsl:text>BL </xsl:text>
+          </xsl:when>
+          <xsl:when test="parent::tei:app[@type='SoSOL']">
+            <xsl:text>PN </xsl:text>
+          </xsl:when>
+        </xsl:choose>
+        <xsl:value-of select="normalize-space(@resp)"/>
+      </xsl:attribute>
+      <xsl:apply-templates/>
+    </xsl:copy>
   </xsl:template>
 
 </xsl:stylesheet>

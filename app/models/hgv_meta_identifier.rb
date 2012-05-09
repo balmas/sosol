@@ -2,11 +2,15 @@ class HGVMetaIdentifier < HGVIdentifier
   attr_accessor :configuration, :valid_epidoc_attributes
 
   PATH_PREFIX = 'HGV_meta_EpiDoc'
-  
-  XML_VALIDATOR = JRubyXML::EpiDocP5Validator
-  
+
   FRIENDLY_NAME = "HGV"
 
+  # Generates HTML preview for hgv metadata using EpiDoc transformation file *start-edition.xsl*
+  # - *Args*  :
+  #   - +parameters+ → xsl parameter hash, e.g. +{:leiden-style => 'ddb'}+, defaults to empty hash
+  #   - +xsl+ → path to xsl file, relative to +RAILS_ROOT+, e.g. +%w{data xslt epidoc my.xsl})+, defaults to +data/xslt/epidoc/start-edition.xsl+
+  # - *Returns* :
+  #   - result of transformation operation as provided by +JRubyXML.apply_xsl_transform+
   def preview parameters = {}, xsl = nil
     JRubyXML.apply_xsl_transform(
       JRubyXML.stream_from_string(self.xml_content),
@@ -15,11 +19,14 @@ class HGVMetaIdentifier < HGVIdentifier
         parameters)
   end
 
+  # Loads +HgvMetaConfiguration+ object (HGV xpaath for EpiDoc and options for the editor) and presets valid EpiDoc attributes
+  # Side effect on +@configuration+ and + @valid_epidoc_attributes+
   def after_initialize
     @configuration = HgvMetaConfiguration.new #YAML::load_file(File.join(RAILS_ROOT, %w{config hgv.yml}))[:hgv][:metadata]
     @valid_epidoc_attributes = @configuration.keys
   end
 
+  # ?
   def to_path
     if name =~ /#{self.class::TEMPORARY_COLLECTION}/
       return self.temporary_path
@@ -40,19 +47,28 @@ class HGVMetaIdentifier < HGVIdentifier
     end
   end
   
+  # ?
   def id_attribute
     return "hgvTEMP"
   end
 
+  # ?
   def n_attribute
     ddb = DDBIdentifier.find_by_publication_id(self.publication.id, :limit => 1)
     return ddb.n_attribute
   end
   
+  # ?
   def xml_title_text
     return "Description of document"
   end
 
+  # Retrieves a single date item (X, Y or Z) from instance variable +self[:textDate]+
+  # - *Args*  :
+  #   - +date_id+ → id of wanted date item, e.g. +'X'+, +'Y'+ or +'Z'+ OR +'dateAlternativeX'+, +'dateAlternativeY'+ or +'dateAlternativeZ'+
+  # - *Returns* :
+  #   - date item X, Y or Z OR nil if the requested date item does not exist
+  # If there is only one date item available this date item might not have any id, so if the callers asks for date item with date id +X+ the first date item will be returned, no matter whether the id machtes or not
   def get_date_item date_id    
     self[:textDate].each{|dateItem|
       if dateItem[:attributes] && dateItem[:attributes][:id] && dateItem[:attributes][:id].include?(date_id)
@@ -64,14 +80,14 @@ class HGVMetaIdentifier < HGVIdentifier
     return nil    
   end
 
-  # retrieve matadata from xml and store as object attributes
+  # Retrieves metadata from xml and stores the information as object attributes
+  # Populates instance variable from EpiDoc xml file
   #   e.g. title: <title>Instruction to track down murderers</title> will become
-  #   self[:title] = 'Instruction to track down murderers'
+  #   +self[:title] = 'Instruction to track down murderers'+
   #   e.g. content text: <keywords><term>a</term><term>b</term></keywords> will become
-  #   self[:contentText] = ['a', 'b']
+  #   +self[:contentText] = ['a', 'b']+
   #   e.g. date will become complicated
-  #
-
+  # Side effect on +self+, particulary on +self[<EpiDoc attribute>]+ like +self[:title]+
   def get_epidoc_attributes
     doc = REXML::Document.new self.content
 
@@ -86,6 +102,12 @@ class HGVMetaIdentifier < HGVIdentifier
     end
   end
 
+  # Looks for a certain xpath that has been configured via +hgv.yml+ and returns a value list containing all xpath matches, e.g. for +:contentText+
+  # - *Args*  :
+  #   - +doc+ → REXML::Element that should be searched for the respective xpath, usually a complete EpiDoc document
+  #   - +config+ → a piece of configuration that holds all relevant data about the wanted item (especially the xpath to search)
+  # - *Returns* :
+  #   - +Array+ of simple string values, e.g. ['Schuldbrief', 'privat']
   def get_epidoc_attributes_list doc, config
     list = []
     doc.elements.each(config[:xpath]){|element|
@@ -96,6 +118,13 @@ class HGVMetaIdentifier < HGVIdentifier
     list
   end
 
+  # Retrieves relevant data from EpiDoc and stores it within a simple tree structure, where each node may have a value plus additional attributes as well as a list of children
+  # - *Args*  :
+  #   - +doc+ → REXML::Element that should be searched for the respective xpath, initially the complete EpiDoc document
+  #   - +config+ → a piece of configuration that holds all relevant data about the wanted item (especially the xpath to search) as well as all information necessary to retrieve its children
+  # - *Returns* :
+  #   - Either an +Array+ of items which contains a list of siblings for a given configuration node [0 => {:value => '', :attributes => {}, :children => {}}, 1 => {...}, 2 => {...}, ... ]
+  #   - or a single item depending of was the config parameter for +:multiple+ sais (either +true+ or +false+)
   def get_epidoc_attributes_tree doc, config
     tree = []
     
@@ -132,6 +161,15 @@ class HGVMetaIdentifier < HGVIdentifier
     return config[:multiple] ? tree : tree.first
   end
 
+  # Retrieves the value (the stripped text representation) of a HGV item
+  # - *Args*  :
+  #   - +doc+ → REXML::Document / REXML::Element which shall be analysed
+  #   - +config+ → configuration snippet that was loaded from +hgv.yml+
+  # - *Returns* :
+  #   - +String+
+  #   - If the xpath can be found with the xml document the value of the first text node will be returned
+  #   - Otherwise this method will return the default value given in the configuration object (which may be just an empty string)
+  # Side effect on +SIDEEFFECT+
   def get_epidoc_attributes_value doc, config
     if element = doc.elements[config[:xpath]]
       element.text && !element.text.strip.empty? ? element.text.strip : config[:default]
@@ -140,13 +178,17 @@ class HGVMetaIdentifier < HGVIdentifier
     end
   end
 
-  # Returns a String of the SHA1 of the commit
+  # Updated EpiDoc file with values from incoming post string, validates xml and commits it to the user repository
+  # - *Args*  :
+  #   - +attributes_hash+ → post parameters
+  #   - +comment+ → comment passed in via post to describe the user's intention
+  # - *Returns* :
+  #   - +String+ of the SHA1 of the commit
+  # Side effect on user's git repository, writes altered xml back to file
   def set_epidoc(attributes_hash, comment)
     populate_epidoc_attributes_from_attributes_hash(attributes_hash)
 
     epidoc = set_epidoc_attributes
-
-    #File.open('/Users/InstPap/Desktop/sosoltest.xml', 'w') {|f| f.write(epidoc) }
 
     #set_content does not validate xml (which is what epidoc is)
     #self.set_content(epidoc, :comment => comment)
@@ -154,6 +196,7 @@ class HGVMetaIdentifier < HGVIdentifier
     self.set_xml_content(epidoc, :comment => comment)
   end
 
+  # ?
   def after_rename(options = {})
     if options[:update_header]
       rewritten_xml =
@@ -169,7 +212,11 @@ class HGVMetaIdentifier < HGVIdentifier
     end
   end
 
-  # saves the values stored within a hash object (usually generated via a webbrowser form)
+  # Saves the values stored within a hash object (usually generated via a webbrowser form)
+  # - *Args*  :
+  #   - +Hash+ +attributes_hash+ → the post parameters
+  # Assumes that +@configuration+ contains fuly loaded configuration object
+  # Side effect on +self[key]+ where key is any valid HGV EpiDoc key
   def populate_epidoc_attributes_from_attributes_hash attributes_hash
 
     @configuration.scheme.each_pair do |key, config|
@@ -216,6 +263,13 @@ class HGVMetaIdentifier < HGVIdentifier
 
 =end
 
+  # Recursively writes user information to EpiDoc xml
+  # - *Args*  :
+  #   - +parent+ → parent element, new elements will be appended to this node
+  #   - +xpath+ → relative xpath that sais where to store the data
+  #   - +data+ → +Array+ of items to be saved to EpiDoc, each item is a +Hash+ object may have a +:value+ and a +Hash+ of +:attributes+ as well as a +Hash+ of +:children+
+  #   - +config+ → configuration as read from +hgv.yml+
+  # Side effect on +parent+, adds new children
   def set_epidoc_attributes_tree parent, xpath, data, config
     child_name = xpath[/\A([\w]+)[\w\/\[\]@:=']*\Z/, 1]
     child_attributes = xpath.scan /@([\w:]+)='([\w]+)'/
@@ -235,7 +289,7 @@ class HGVMetaIdentifier < HGVIdentifier
           child.attributes['n'] = index.to_s
           index += 1
         end
-  
+
         if item.class == String && !item.strip.empty?
           child.text = item.strip
         else
@@ -264,19 +318,25 @@ class HGVMetaIdentifier < HGVIdentifier
           end
         end
 
-        
         if item[:preFlag] # CL: CROMULENT GEO HACK
           offset = REXML::Element.new 'offset'
           offset.add_text 'bei'
           parent.add offset
         end
-        
+
         parent.add child
 
       end
     }
   end
 
+  # Takes all HGV values stored within current object instance and writes them to EpiDoc
+  # - *Returns* :
+  #   - +String+ pretty EpiDco xml format of current HGV meta data file
+  # Assumes +@configuration+ member is loaded with configuration settings from +hgv.yml+
+  # e.g. complext tree structure: {"children"=>{"pointer"=>{"attributes"=>{"target"=>"http://papyri.info/biblio/12345"}}, "pagination"=>{"value"=>"pp. 12-14"}}}
+  # e.g. simple list: ["Brief (amtlich)", "Iesus an Vernas", "Mitteilung", "daß eine Säule im Steinbruch vollendet und zu Verladung bereit ist", "neu"]
+  # e.g. simple string value: "Letter from Iesous to Vernas"
   def set_epidoc_attributes
     # load xml document
     doc = REXML::Document.new self.content
@@ -306,15 +366,25 @@ class HGVMetaIdentifier < HGVIdentifier
       else
         value = self[key] && !self[key].empty? ? (config[:children] || config[:attributes] ? self[key][:value] : self[key]) : nil
         
-        if value && !value.empty? # CL: Biblio here!
+        if attributeLegal? key # value && !value.empty? # CL: Biblio patch
           element = doc.bulldozePath(config[:xpath])
+
           element.text = value
           if config[:attributes]
             config[:attributes].each_pair {|attribute_key, attribute_config|
-              element.attributes[attribute_config[:name]] = self[key][:attributes][attribute_key] #self[attribute_key]
+              element.attributes[attribute_config[:name]] = self[key][:attributes][attribute_key]
             }
           end
           
+          if config[:children] # CL: Biblio patch
+            config[:children].each_pair {|child_key, child_config|
+              element.elements.delete_all child_config[:xpath]
+              if  self[key][:children] && self[key][:children].kind_of?(Hash) && self[key][:children][child_key]
+                set_epidoc_attributes_tree element, child_config[:xpath], [self[key][:children][child_key]], child_config
+              end
+            }
+          end
+
         else
 
           doc.elements.delete_all config[:xpath]
@@ -333,15 +403,67 @@ class HGVMetaIdentifier < HGVIdentifier
     doc = sort doc
 
     # write back to a string
-    formatter = REXML::Formatters::Pretty.new
+    formatter = PrettySsime.new
     formatter.compact = true
-    formatter.width = 512
+    formatter.width = 2**32
     modified_xml_content = ''
     formatter.write doc, modified_xml_content
 
     return modified_xml_content
   end
 
+  # Tells whether a certain key is a valid HGV accessor
+  # - *Args*  :
+  #   - +key+ → doubted HGV key
+  # - *Returns* :
+  #   - +true+ if there is a local attribute by the name of +key+
+  #   - +false+ otherwise
+  def attributeLegal? key
+   legal? self[key]
+  end
+  
+  # Determines whether incoming user data contains any valid data or whether is consindered to be empty
+  # - *Args*  :
+  #   - +candide+ → test candidate to be checked for its legalness
+  # - *Returns* :
+  #   - +true+ if data contains simple value or if one of its attributes is set to an non-empty string, or one of its children contains valid data
+  #   - +false+ otherwise
+  # Recursively tests the current node as well as its children (if there are any)
+  def legal? candide
+    if candide
+      if (candide.kind_of?(Array) || candide.kind_of?(String)) &&  !candide.empty?
+        return true
+      elsif candide.kind_of?(Hash)
+        if candide[:value] && candide[:value].kind_of?(String) && !candide[:value].empty?
+          return true
+        end
+
+        if candide[:attributes] && candide[:attributes].kind_of?(Hash)
+          candide[:attributes].each_pair{|key, value|
+            if value && value.kind_of?(String) && !value.empty?
+              return true
+            end
+          }
+        end
+
+        if candide[:children] && candide[:children].kind_of?(Hash)
+          candide[:children].each_pair{|key, child|
+            if legal = legal?(child)
+              return true
+            end
+          }
+        end
+      end
+    end
+    false
+  end
+
+  # Some EpiDoc nodes need to be given in a certain order (in order to represent valid EpiDoc or to suffice special HGV needs), this method sorts nodes +msIdentifier+, +altIdentifier[@type='temporary']+ for TEI:msIdentifier and +offset+ for TEI:date
+  # - *Args*  :
+  #   - +doc+ → REXML::Document that contains HGV EpiDoc xml which should be sorted
+  # - *Returns* :
+  #   - version of +doc+ with correctly ordered TEI elements
+  # Side effect on +doc+
   def sort doc
     # general
     sort_paths = {
@@ -408,6 +530,14 @@ class HGVMetaIdentifier < HGVIdentifier
    return doc 
   end
 
+  # Saves a value to +self[key]+ after doing some validity checks and some data sanitisation
+  # - *Args*  :
+  #   - +key+ → HGV key of interesset
+  #   - +value+ → value to be set
+  #   - +default+ → default value, defaults to +nil+
+  # - *Returns* :
+  #   - sanitised value
+  # Side effect on +self[key]+
   def populate_epidoc_attribute key, value, default = nil
     if !value
       value = default
@@ -421,6 +551,12 @@ class HGVMetaIdentifier < HGVIdentifier
     self[key] = value    
   end
 
+  # Uses post parameters to recursively populate an internal tree which can be used lateron for easy data access
+  # - *Args*  :
+  #   - +data+ → post data
+  #   - +config+ → HGV configuration
+  # - *Returns* :
+  #   - data tree
   def populate_tree_from_attributes_hash data, config
 
     result_item = {
@@ -448,6 +584,7 @@ class HGVMetaIdentifier < HGVIdentifier
       end
 
       if config[:children]
+
         config[:children].each_pair{|child_key, child_config|
           if child_config[:multiple]
             children = []
@@ -465,7 +602,7 @@ class HGVMetaIdentifier < HGVIdentifier
           end
         }
       end
-      
+
       if config[:preFlag] and data[:children][:offset][:value] and  data[:children][:offset][:value] == 'bei' # CL: CROMULENT GEO HACK
         result_item[:preFlag] = 'bei'
       end
@@ -475,10 +612,14 @@ class HGVMetaIdentifier < HGVIdentifier
    result_item
   end
 
+  # Reads out config/hgv.yml and stores all configuration parameters in an instance variable called +@scheme+. Adds defaults and prunes invalid configuration entries.
   class HgvMetaConfiguration
 
     attr_reader :scheme, :keys;
 
+    # Constructor laods and complements HGV configuration from +config/hgv.yml+ and prepares a list that contains all valid HGV keys
+    # Assumes the existenz of configuration file +config/hgv.yml+, for further information about expected values and format see there
+    # Side effect on +@scheme+ and +@keys+
     def initialize
       @scheme = YAML::load_file(File.join(RAILS_ROOT, %w{config hgv.yml}))[:hgv][:metadata]
 
@@ -491,8 +632,11 @@ class HGVMetaIdentifier < HGVIdentifier
   
     end
 
-    # recursivle retrieves all valid keys (element key, attribute keys, child keys)
-    # configuration is a single element node of the hgv configuration
+    # Recursivle retrieves all valid keys (element key, attribute keys, child keys)
+    # - *Args*  :
+    #   - +configuration_node+ → a single element node of the hgv configuration
+    # - *Returns* :
+    #   - +Array+ of string values, containing all valid keys for HGV meta data nodes, such as [:type, :subtype, :date, :place, ...] for HGV configuration node :provenance
     def retrieve_all_keys configuration_node
       keys = configuration_node[:attributes] ? configuration_node[:attributes].keys : []
       if configuration_node[:children]
@@ -504,8 +648,11 @@ class HGVMetaIdentifier < HGVIdentifier
       return keys
     end
 
-    # recursively adds optional attributes to configuration
-    # parameter configuration is initially the complete hgv configuration, during recursion it contains the content of the children attribute
+    # Recursively adds optional attributes to configuration
+    # e.g. +:optional+ defaults to +true+ whereas +:multiple+ defaults to false
+    # - *Args*  :
+    #   - +configuration+ → initially the complete HGV configuration, during recursion it contains the content of the children attribute
+    # Side effect on +configuration+ (adds default values and missing attributes)
     def add_meta_information! configuration
       configuration.each_value {|element|
 
@@ -524,8 +671,10 @@ class HGVMetaIdentifier < HGVIdentifier
       }
     end
 
-    # adds optional attributes (suchs as mulplicity or default value) to a configuration item
-    # parameter item may be an element or an attribute
+    # Adds optional attributes (suchs as mulplicity or default values) to a configuration item
+    # - *Args*  :
+    #   - +item+ → may be an element or an attribute
+    # Side effect on +item+ (sets default values, adds missing attributes)
     def add_defaults! item
       if item.keys.include? :multiple
         item[:multiple] = item[:multiple] ? true : false
@@ -547,15 +696,14 @@ class HGVMetaIdentifier < HGVIdentifier
         item[:pattern] = nil
       end
 
-      #if item.keys.include? :children
-      #  item[:structure] = :recursive
-      #elsif item[:multiple]
-      #  item[:structure] = :multiple
-      #else
-      #  item[:structure] = :simple
-      #end
     end
 
+    # Retrieves the xpath for a specified HGV key if the key belongs to a top level HGV configuration node, i.e. for HGV key +:textDate+, but not for HGV key +:when+ which is a child node of +:textDate+
+    # - *Args*  :
+    #   - +key+ → key, e.g. +:provenance+
+    # - *Returns* :
+    #   - String xpath, string will be empty if xpath cannot be given for the requested key
+    # Assumes that +config/hgv.yml+ has been loaded into +@scheme+
     def xpath key
       if @scheme.keys.include? key
         @scheme[key][:xpath]

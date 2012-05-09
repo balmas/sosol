@@ -1,5 +1,8 @@
 # Settings specified here will take precedence over those in config/environment.rb
 
+
+config.log_level = :info
+
 # The test environment is used exclusively to run your application's
 # test suite.  You never need to work with it otherwise.  Remember that
 # your test database is "scratch space" for the test suite and is wiped
@@ -27,3 +30,5 @@ config.action_mailer.delivery_method = :test
 require File.join(File.dirname(__FILE__), 'test_secret')
 
 REPOSITORY_ROOT = File.join(RAILS_ROOT, 'db', 'test', 'git')
+CANONICAL_CANONICAL_REPOSITORY = CANONICAL_REPOSITORY
+CANONICAL_REPOSITORY = File.join(REPOSITORY_ROOT, 'canonical.git')

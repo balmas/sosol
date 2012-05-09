@@ -52,12 +52,14 @@ Rails::Initializer.run do |config|
   
   config.gem "factory_girl", :version => "~> 1.2.2"
   
-  config.gem 'hoptoad_notifier', :version => ">= 2.4.10"
+  config.gem 'airbrake', :version => ">= 3.0.5"
   
   config.gem 'grit',
     :lib     => 'grit',
     :source  => 'http://gemcutter.org',
     :version => '>= 2.0'
+
+  config.gem 'rubyzip', :lib => 'zip/zip', :version => ">= 0.9.5"
 
   # Only load the plugins named here, in the order given. By default, all plugins 
   # in vendor/plugins are loaded in alphabetical order.
