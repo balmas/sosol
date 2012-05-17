@@ -2,7 +2,7 @@
 class Identifier < ActiveRecord::Base
 
   # FORK CHANGE START - should be configurable?
-  IDENTIFIER_SUBCLASSES = %w{ PassageCTSIdentifier TeiCTSIdentifier TeiTransCTSIdentifier EpiCTSIdentifier EpiTransCTSIdentifier EpiMetaCITEIdentifier DDBIdentifier HGVMetaIdentifier HGVTransIdentifier BiblioIdentifier }
+  IDENTIFIER_SUBCLASSES = SITE_IDENTIFIERS.split(",")
   # FORK CHANGE END  
   
   FRIENDLY_NAME = "Base Identifier"
@@ -25,6 +25,20 @@ class Identifier < ActiveRecord::Base
   
   require 'jruby_xml'
 
+
+  # - *Returns* :
+  #   - all identifier classes enabled for the site
+  def self.site_identifier_classes
+    site_classes = []
+    site_identifiers = SITE_IDENTIFIERS.split(",")
+    Identifier::IDENTIFIER_SUBCLASSES.each do |identifier_class|
+        if site_identifiers.include?(identifier_class.to_s)
+            site_classes << identifier_class
+        end    
+    end
+    return site_classes
+  end
+  
   # - *Returns* :
   #   - the originally created publication of this identifier (publciation that does not have a parent id)
   def origin

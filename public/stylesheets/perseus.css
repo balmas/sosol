@@ -1,0 +1,24 @@
+.publication_list_holder table.results td {
+	padding-left: 5px;
+	padding-right: 5px;
+	font-size: smaller;
+}
+
+.dashboard_feed {
+	font-size: smaller;
+	clear: both;
+	margin-top: 5em;
+}
+
+#cts_selector {
+	clear: both;
+	float: left;
+	padding: .5em;
+	margin: 1em;
+	border: 1px solid black;
+}
+
+.cts_selector_hint {
+	font-size: smaller;
+	font-style: italic;
+}

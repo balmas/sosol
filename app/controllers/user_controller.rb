@@ -187,7 +187,7 @@ class UserController < ApplicationController
     @editing_publications = Publication.find_all_by_owner_id(@current_user.id, :conditions => {:community_id => nil, :owner_type => 'User', :creator_id => @current_user.id, :parent_id => nil, :status => 'editing' }, :include => [{:identifiers => :votes}], :order => "updated_at DESC")
     @new_publications = Publication.find_all_by_owner_id(@current_user.id, :conditions => {:community_id => nil, :owner_type => 'User', :creator_id => @current_user.id, :parent_id => nil, :status => 'new' }, :include => [{:identifiers => :votes}], :order => "updated_at DESC")
     @committed_publications = Publication.find_all_by_owner_id(@current_user.id, :conditions => {:community_id => nil, :owner_type => 'User', :creator_id => @current_user.id, :parent_id => nil, :status => 'committed' }, :include => [{:identifiers => :votes}], :order => "updated_at DESC")
-        
+   
     @show_events = true
   end
   

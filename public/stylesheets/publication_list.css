@@ -74,7 +74,8 @@
   border-width: 2px;
   border-bottom-style: solid;
   border-color: black;
-  margin: 2px; }
+  margin: 2px; 
+  clear: both;}
 
 .publications_header_title {
   overflow: hidden;
@@ -434,3 +435,7 @@
 
 .no_data {
   background-color: lightgray; }
+  
+.dashboard_feed {
+	clear:both;
+}

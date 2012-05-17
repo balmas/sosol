@@ -31,5 +31,6 @@
 
 - if defined?(@show_events)
   - @events = Event.find(:all, :order => "created_at DESC", :limit => 25, :include => [:owner, :target])[0..24]
-  %h2 News Feed
-  = render :partial => "events/list", :object => @events
+  %div{ :class => ['dashboard_feed']}
+    %h2 News Feed
+    = render :partial => "events/list", :object => @events

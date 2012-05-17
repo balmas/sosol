@@ -81,15 +81,12 @@ class TeiTransCTSIdentifier < TeiCTSIdentifier
   
   def after_rename(options = {})
     if options[:update_header]
-      #related_meta = self.publication.identifiers.collect{|i| i.to_components.last if i.class == EpiMetaCITEIdentifier}.compact
       rewritten_xml =
         JRubyXML.apply_xsl_transform(
           JRubyXML.stream_from_string(content),
           JRubyXML.stream_from_file(File.join(RAILS_ROOT,
             %w{data xslt translation update_header.xsl})),
           :filename_text => self.to_components.last,
-          #:CITE_text => related_meta.join(' '),
-          :TM_text => related_meta.collect{|h| h.gsub(/\D/,'')}.uniq.join(' '),
           :title_text => NumbersRDF::NumbersHelper::identifier_to_title([NumbersRDF::NAMESPACE_IDENTIFIER,CTSIdentifier::IDENTIFIER_NAMESPACE,self.to_components.last].join('/')),
           :reprint_from_text => options[:set_dummy_header] ? options[:original].title : '',
           :reprint_ref_attribute => options[:set_dummy_header] ? options[:original].to_components.last : ''

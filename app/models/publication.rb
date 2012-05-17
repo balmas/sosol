@@ -71,7 +71,6 @@ class Publication < ActiveRecord::Base
     Rails.logger.info('------------------------------------')
 
     #merge xml
-    meta = REXML::Document.new tmp[:EpiMetaCITEIdentifier].to_s
     #text << REXML::Document.new tmp[:EpiCTSIdentifier].to_s
     #text << REXML::Document.new tmp[:PassageCTSIdentifier].to_s
     
@@ -133,7 +132,7 @@ class Publication < ActiveRecord::Base
     self.title = original_title
 
     # FORK CHANGE - list s/b configurable?
-    [TeiCTSIdentifier,EpiCTSIdentifier,EpiTransCTSIdentifier,EpiMetaCITEIdentifier,DDBIdentifier, HGVMetaIdentifier, HGVTransIdentifier, BiblioIdentifier].each do |identifier_class|
+    SITE_IDENTIFIERS.split(",").each do |identifier_class|
  
       if identifiers.has_key?(identifier_class::IDENTIFIER_NAMESPACE)
         identifiers[identifier_class::IDENTIFIER_NAMESPACE].each do |identifier_string|
@@ -434,7 +433,6 @@ class Publication < ActiveRecord::Base
             
     #create the required meta data and transcriptions
     new_cts = EpiCTSIdentifier.new_from_template(new_publication)
-    new_citemeta = EpiMetaCITEIdentifier.new_from_template(new_publication)      
       
     #new_ddb = DDBIdentifier.new_from_template(new_publication)      
     #new_hgv_meta = HGVMetaIdentifier.new_from_template(new_publication)
@@ -1490,7 +1488,6 @@ class Publication < ActiveRecord::Base
     has_biblio = false
     
     # FORK CHANGE START
-    has_citemeta = false
     has_epicts = false
     has_teicts = false
     # FORK CHANGE END
@@ -1506,10 +1503,7 @@ class Publication < ActiveRecord::Base
        has_text = true
       end
       # FORK CHANGE START
-      if i.class.to_s == "EpiMetaCITEIdentifier"
-        has_citemeta = true
-      end
-       if i.class.to_s == "EpiCTSIdentifier"
+      if i.class.to_s == "EpiCTSIdentifier"
        has_epicts = true
       end
       if i.class.to_s == "TeiCTSIdentifier"
@@ -1540,19 +1534,13 @@ class Publication < ActiveRecord::Base
       creatable_identifiers.delete("PassageCTSIdentifier")
       creatable_identifiers.delete("TeiTransCTSIdentifier")
     end
-    if !has_citemeta
-       creatable_identifiers.delete("EpiCTSIdentifier")
-       creatable_identifiers.delete("EpiTransCTSIdentifier")  
-       creatable_identifiers.delete("HGVMetaIdentifier")          
-    else
-      creatable_identifiers.delete("HGVMetaIdentifier")
-    end
     if has_teicts
-      creatable_identifiers.delete("EpiMetaCITEIdentifier")      
+      creatable_identifiers.delete("EpiCTSIdentifier") # its either an inscription or a text
       creatable_identifiers.delete("PassageCTSIdentifier") # no passages from scratch
     end
     if has_epicts
-      creatable_identifiers.delete("PassageCTSIdentifier")   
+      creatable_identifiers.delete("PassageCTSIdentifier")
+      creatable_identifiers.delete("TeiCTSIdentifier") # its either an inscription or a text   
     end
     multi_identifiers = ['EpiTransCTSIdentifier','TeiTransCTSIdentifier']
     

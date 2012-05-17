@@ -3,15 +3,8 @@
     return "#{request.domain == 'papyri.info' ? '' : url_for(:controller => 'ajax_proxy', :only_path => true)}";
   }
   function get_collection_prefix() {
-
-    // FORK CHANGE START configuration
-    prefix =  "#{url_for(:controller => 'cts_proxy', :only_path => true)}";
-    
-     if($F('IdentifierClass') == 'CTSIdentifier') {
-      return prefix + '/editions?inventory=' + $F('CTSIdentifierCollectionSelect');
-    
-    } else if($F('IdentifierClass') == 'DDBIdentifier') {
-    // FORK CHANGE END
+    prefix = get_proxy_prefix() + "#{request.domain == 'papyri.info' ? '' : '/papyri.info'}";
+    if($F('IdentifierClass') == 'DDBIdentifier') {
       return prefix + '/ddbdp/' + $F('DDBIdentifierCollectionSelect');
     }
     else {
@@ -28,25 +21,8 @@
     
     select_element.insert("<option></option>");
   }
-  function populate_selector(select_element,options) {
-    select_element.childElements().each(Element.remove);
-    
-    for (var i=0; i<options.length; i++)
-    {
-      parts = options[i].split('|');
-      if (parts.length == 2) {
-        select_element.insert("<option value='" + parts[1] + "'>" + parts[0] + "</option>");
-      }
-      else if (options[i]){
-        select_element.insert("<option>" + options[i] + "</option>");
-      } 
-    }
-     select_element.insert("<option value=''>click to select...</option>");
-  }
-  
   function toggle_availability() {
     ['IdentifierClass',
-     'CTSIdentifierCollectionSelect',
      'HGVIdentifierCollectionSelect',
      'DDBIdentifierCollectionSelect',
      'volume_number', 'document_number'].each(function(s) {
@@ -61,20 +37,6 @@
   function construct_hgv_sparql_query(volume_reference) {
     return get_proxy_prefix() + "#{request.domain == 'papyri.info' ? '/mulgara/sparql/?query=' : '/sparql/'}" +  "prefix%20dc%3A%20%3Chttp%3A%2F%2Fpurl.org%2Fdc%2Fterms%2F%3E%20%0Aconstruct%20%7B%3Chttp%3A%2F%2Fpapyri.info%2Fhgv%2F" + volume_reference + "%3E%20dc%3AhasPart%20%3Fb%7D%0Afrom%20%3Crmi%3A%2F%2Flocalhost%2Fpapyri.info%23pi%3E%0Awhere%20%7B%20%3Chttp%3A%2F%2Fpapyri.info%2Fhgv%2F" + volume_reference + "%3E%20dc%3AhasPart%20%3Fa%20.%0A%20%20%3Fa%20dc%3Aidentifier%20%3Fb%0A%20%20filter%20regex%28str%28%3Fb%29%2C%20%22%5Ehttp%3A%2F%2Fpapyri.info%22%29%7D" + "#{request.domain == 'papyri.info' ? '&format=json' : ''}";
   }
-  
-  function get_edition_urns()
-  {
-    
-      var request_url = get_collection_prefix();
-      new Ajax.Request(request_url, {
-        method: 'get',
-        dataType: 'text',
-        onSuccess: function(response) {
-          populate_selector($('edition_urn'),response.responseText.split(',').sort());
-        }
-     });
-  }
-  
   function get_allowed_values(select_element, volume_number, request_url, disable_volume) {
     reset_selector(select_element);
     toggle_availability();
@@ -86,7 +48,6 @@
       if($F('IdentifierClass') == 'DDBIdentifier') {
         request_url = request_url + ';' + volume_number + "#{request.domain == 'papyri.info' ? '/json' : ''}";
       }
-      // TODO add support for EpiCTS here
       else {
         volume_reference = request_url.sub(/^.*\//,'') + '_' + volume_number;
         request_url = construct_hgv_sparql_query(volume_reference);
@@ -220,10 +181,6 @@
     get_allowed_values($('document_number'),$F('volume_number'));
   }
   
-  function update_editions() {
-    get_edition_urns();
-  }
-  
   function reset_vol_doc_em() {
     reset_selector($('volume_number'));
     reset_selector($('document_number'));
@@ -260,40 +217,33 @@
   
   document.observe("dom:loaded", function() {
     $('IdentifierClass').childElements()[0].selected = true;
+    $('DDBIdentifierCollectionSelect').childElements()[0].selected = true;
+    $('HGVIdentifierCollectionSelect').childElements()[0].selected = true;
     
-    // FORK CHANGE START
-    //$('DDBIdentifierCollectionSelect').childElements()[0].selected = true;
-    //$('HGVIdentifierCollectionSelect').childElements()[0].selected = true;
-    
-    //$('DDBIdentifierCollectionSelect').removeClassName('invisible');
-    //$('HGVIdentifierCollectionSelect').addClassName('invisible');
-    // FORK CHANGE END
+    $('DDBIdentifierCollectionSelect').removeClassName('invisible');
+    $('HGVIdentifierCollectionSelect').addClassName('invisible');
 
     if ($('APISIdentifierCollectionSelect')) //only when used in helper pop up
       {
         $('APISIdentifierCollectionSelect').childElements()[0].selected = true;
         $('APISIdentifierCollectionSelect').addClassName('invisible');
       }
-    // FORK CHANGE START
-    //reset_vol_doc_em();
-    get_edition_urns();
-    $('edition_urn').disabled=false;
-    $('emend_button').disabled=false;
-     // FORK CHANGE END
     
+    reset_vol_doc_em();
   });
-  
 - cache(:action => 'dashboard', :part => 'publication_selector') do
   - unless defined? hide_text
     %p== Existing publication:
   - form_tag :controller => 'publications', :action => "create_from_selector" do
-    // FORK CHANGE START
-    = select_tag('IdentifierClass', options_for_select([%w{CTS CTSIdentifier}]), :onchange => "['CTS',].each(function(i){$(i + 'IdentifierCollectionSelect').toggleClassName('invisible')});reset_selector($('volume_number'));reset_selector($('document_number'));$('volume_number').disabled=true;$('document_number').disabled=true;")
-    - [CTSIdentifier].each do |identifier_class|
-      = select_tag("#{identifier_class}CollectionSelect", options_for_select(identifier_class.inventories_hash.keys), :onchange => "update_editions();$('emend_button').disabled='';if(this.options[0].value==''){this.remove(0)}")
-    = select_tag 'edition_urn', nil, :disabled => true, :style => 'min-width: 5em;', :onchange => "if(this.options[0].value==''){this.remove(0)};"
-    //= text_field_tag('passage')
-    // FORK CHANGE END
+    -if emend == :helper
+      = select_tag('IdentifierClass', options_for_select([%w{DDB DDBIdentifier},%w{HGV HGVIdentifier},%w{APIS APISIdentifier}]), :onchange => "IDClassChange(this.options[this.selectedIndex].value);")
+      = select_tag("APISIdentifierCollectionSelect", options_for_select([['','']] + APISIdentifier.collection_names_hash.sort), :class => 'invisible', :onchange => "reset_selector($('document_number'));$('volume_number').disabled=true;$('document_number').disabled='';$('emend_button').disabled='';get_apis_documents();if(this.options[0].value==''){this.remove(0)}")
+    -else
+      = select_tag('IdentifierClass', options_for_select([%w{DDB DDBIdentifier},%w{HGV HGVIdentifier}]), :onchange => "['DDB','HGV'].each(function(i){$(i + 'IdentifierCollectionSelect').toggleClassName('invisible')});reset_vol_doc_em();")
+    - [DDBIdentifier, HGVIdentifier].each do |identifier_class|
+      = select_tag("#{identifier_class}CollectionSelect", options_for_select([['','']] + identifier_class.collection_names_hash.invert.sort), :class => identifier_class == DDBIdentifier ? '' : 'invisible', :onchange => "reset_selector($('document_number'));$('volume_number').disabled='';update_volumes();$('document_number').disabled=true;$('emend_button').disabled='';if(this.options[0].value==''){this.remove(0)}")
+    = select_tag 'volume_number', nil, :disabled => true, :style => 'min-width: 5em;', :onchange => "$('document_number').disabled='';update_documents();if(this.options[0].value==''){this.remove(0)}"
+    = select_tag 'document_number', nil, :disabled => true, :style => 'min-width: 5em;', :onchange => "if(this.options[0].value==''){this.remove(0)};"
     -if emend == :showemend
       = submit_tag "Emend", :disabled => true, :id => 'emend_button'
     -else

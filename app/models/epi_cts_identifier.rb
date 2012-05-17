@@ -3,7 +3,7 @@ class EpiCTSIdentifier < CTSIdentifier
   PATH_PREFIX = 'CTS_XML_EpiDoc'
   COLLECTION_XML_PATH = 'CTS_INVENTORIES/epigraphy.xml'
   
-  FRIENDLY_NAME = "Text"
+  FRIENDLY_NAME = "Inscription Text"
   
   IDENTIFIER_NAMESPACE = 'epigraphy_edition'
   

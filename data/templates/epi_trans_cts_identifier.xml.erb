@@ -8,10 +8,6 @@
       </titleStmt>
       <publicationStmt>
         <authority>Perseus Project</authority>
-        <%- related_metas = self.publication.identifiers.select{|i| i.class == EpiMetaCITEIdentifier}.collect{|j| j.to_components.last} -%>
-        <%- related_metas.each do |cite| -%>
-        <idno type="urn:cite"><%= cite %></idno>
-        <%- end -%>
         <idno type="urn:cts"><%= id %></idno>
         <availability>
           <p>This work is licensed under a
