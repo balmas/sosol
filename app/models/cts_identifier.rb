@@ -2,22 +2,75 @@ class CTSIdentifier < Identifier
   # This is a superclass for objects using CITE Identifiers, including
   # shared constants and methods. No instances of CITEIdentifier should be
   # created. 
-  COLLECTION_XML_PATH = 'CTS_INVENTORIES/inventory.xml'
   FRIENDLY_NAME = "Text"
   
   IDENTIFIER_PREFIX = 'urn:cts:' 
   IDENTIFIER_NAMESPACE = ''
   NAMESPACE_DOMAIN = '.perseus.org'
   TEMPORARY_COLLECTION = 'TempTexts'
+  TEMPORARY_TITLE = 'New Text'
   
+  def titleize
+    title = nil
+    Rails.logger.info("Looking for #{self.class::TEMPORARY_COLLECTION}")
+    if (self.name =~ /#{self.class::TEMPORARY_COLLECTION}/)
+       title = self.class::TEMPORARY_TITLE
+    else  
+      begin
+        # if we don't have a publication associated with identifier yet, we're most likely
+        # looking for the title for the parent 'publication' which probably should be the work title
+        # and not the version-specific label
+        if nil == self.publication
+          title = CTS::CTSLib.workTitleForUrn(self.inventory,self.urn_attribute)
+        else
+          title = CTS::CTSLib.versionTitleForUrn(self.inventory,self.urn_attribute)
+        end
+      rescue Exception => e
+        Rails.logger.error("Error retrieving title: #{e.class.to_s}, #{e.to_s}")
+      end
+    end
+    if (title.nil?)
+      title = self.name
+    end
+    return title
+  end
+
+  def self.new_from_template(publication,inventory,urn,pubtype,lang)
+    temp_id = self.new(:name => self.next_temporary_identifier(inventory,urn,pubtype,lang))
+    Rails.logger.info("adding identifier to pub #{temp_id}")
+    temp_id.publication = publication 
+    temp_id.save!
+    return temp_id
+  end
+  
+  def self.new_from_inventory(publication,inventory,urn,pubtype)
+    document_path = inventory + "/" + CTS::CTSLib.pathForUrn(urn,pubtype)
+    temp_id = self.new(:name => document_path)
+    # make sure we have a path on master before forking it for this publication 
+    if (publication.repository.get_file_from_branch(temp_id.to_path, 'master').blank?)
+      #raise error
+      raise temp_id.to_path + " not found on master"
+    end
+    Rails.logger.info("adding identifier to pub #{temp_id}")
+    temp_id.publication = publication 
+    temp_id.save!
+    return temp_id
+  end
+
   def self.inventories_hash
     return CTS::CTSLib.getInventoriesHash()
   end
   
-  def self.next_temporary_identifier
+  def self.next_temporary_identifier(collection,template,pubtype,lang)
+    urnObj = CTS::CTSLib.urnObj(template)
     year = Time.now.year
+    # we want to take the text group and work from the template urn and create our own edition urn
+    # TODO - need to handle differing namespaces on tg and work
+    newUrn = "urn:cts:" + urnObj.getTextGroup(true) + "." + urnObj.getWork(false) + ".#{self::TEMPORARY_COLLECTION}-#{lang}-#{year}-"
+    Rails.logger.info("New urn:#{newUrn}")
+    document_path = collection + "/" + CTS::CTSLib.pathForUrn(newUrn,pubtype)
     latest = self.find(:all,
-                       :conditions => ["name like ?", "#{self::IDENTIFIER_NAMESPACE}#{self::NAMESPACE_DOMAIN}/#{self::TEMPORARY_COLLECTION}.#{year}.%"],
+                       :conditions => ["name like ?", "#{document_path}%"],
                        :order => "name DESC",
                        :limit => 1).first
     if latest.nil?
@@ -25,17 +78,15 @@ class CTSIdentifier < Identifier
       document_number = 1
     else
       Rails.logger.info("------Last component" + latest.to_components.last.split(/[\.;]/).last )
-      document_number = latest.to_components.last.split(/[\.;]/).last.to_i + 1
+      document_number = latest.to_components.last.split(/[\-;]/).last.to_i + 1
     end
     
-    return sprintf("#{self::IDENTIFIER_NAMESPACE}#{self::NAMESPACE_DOMAIN}/#{self::TEMPORARY_COLLECTION}.%04d.%04d",
-                   year, document_number)
+    return "#{document_path}#{document_number}"
   end
   
   def self.collection_names
-    # to do - pull from CTS inventory
     unless defined? @collection_names
-      @collection_names = Array ["epigraphy.perseus.org","greekLang","latinLang"]
+      @collection_names = self.identifier_hash.keys
     end
     return @collection_names
   end
@@ -52,6 +103,15 @@ class CTSIdentifier < Identifier
     end
     
     return @collection_names_hash
+  end
+  
+  def reprinted_in
+    return REXML::XPath.first(REXML::Document.new(self.xml_content),
+      "/TEI/text/body/head/ref[@type='reprint-in']/@n")
+  end
+  
+  def is_reprinted?
+    return reprinted_in.nil? ? false : true
   end
   
   def urn_attribute
@@ -71,21 +131,26 @@ class CTSIdentifier < Identifier
     # TODO lookup title
     self.urn_attribute
   end
+  
+  def inventory
+    return self.to_components[0]
+  end
     
   def to_urn_components
     temp_components = self.to_components
     # should give us, e.g.
-    # [0] greekLang - namespace
-    # [1] tlg0012.tlg001 - work
-    # [2] edition or translation
-    # [3] perseus-grc1 - edition + examplar
-    # [4] 1.1 - passage
+    # [0] collection = e.g. perseus
+    # [1] namespace - e.g. greekLang
+    # [2] work - e.g. tlg0012.tlg001 
+    # [3] edition or translation
+    # [4] perseus-grc1 - edition + examplar
+    # [5] 1.1 - passage
     Rails.logger.info(temp_components.inspect)
     urn_components = []
-    urn_components << temp_components[0]
-    urn_components << [temp_components[1],temp_components[3]].join(".")
-    unless temp_components[4].nil? 
-      urn_components << temp_components[4] 
+    urn_components << temp_components[1]
+    urn_components << [temp_components[2],temp_components[4]].join(".")
+    unless temp_components[5].nil? 
+      urn_components << temp_components[5] 
     end
     return urn_components
   end
@@ -94,15 +159,17 @@ class CTSIdentifier < Identifier
     path_components = [ self.class::PATH_PREFIX ]
     temp_components = self.to_components
     Rails.logger.info("PATH:" + temp_components.inspect)
-    # should give us, e.g.
-    # [0] greekLang - namespace
-    # [1] tlg0012.tlg001 - work
-    # [2] edition or translation
-    # [3] perseus-grc1 - edition + examplar
-    # [4] 1.1 - passage
-    cts_ns = temp_components[0]
-    cts_urn = temp_components[1] + "." + temp_components[3]
-    cts_passage = temp_components[4]
+     # should give us, e.g.
+    # [0] collection = e.g. perseus
+    # [1] namespace - e.g. greekLang
+    # [2] work - e.g. tlg0012.tlg001 
+    # [3] edition or translation
+    # [4] perseus-grc1 - edition + examplar
+    # [5] 1.1 - passage
+    cts_inv = temp_components[0]
+    cts_ns = temp_components[1]
+    cts_urn = temp_components[2] + "." + temp_components[4]
+    cts_passage = temp_components[5]
     
     cts_textgroup,cts_work,cts_edition,cts_exemplar, =
       cts_urn.split('.',4).collect {|x| x.tr(',/','-_')}
@@ -123,6 +190,7 @@ class CTSIdentifier < Identifier
     cts_xml_path_components << 'xml' 
     cts_xml_path = cts_xml_path_components.join('.')
     
+    path_components << cts_inv
     path_components << cts_ns
     path_components << cts_textgroup
     unless cts_work.nil?
@@ -130,7 +198,7 @@ class CTSIdentifier < Identifier
     end
     path_components << cts_xml_path
     
-    # e.g. CTS_XML_PASSAGES/greekLang/tlg0012/tlg001/tlg0012.tlg001.perseus-grc1.1.1.xml
+    # e.g. CTS_XML_PASSAGES/perseus/greekLang/tlg0012/tlg001/tlg0012.tlg001.perseus-grc1.1.1.xml
     return File.join(path_components)
   end
 end

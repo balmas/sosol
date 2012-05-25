@@ -439,7 +439,7 @@ class PublicationsController < ApplicationController
     
 
     determine_creatable_identifiers()
-    
+        
     respond_to do |format|
       format.html # show.html.erb
       format.xml  { render :xml => @publication }
@@ -566,11 +566,12 @@ class PublicationsController < ApplicationController
         document_path = [collection, volume, document].join('_')
       end
     elsif identifier_class == 'CTSIdentifier'
-        document_path = CTS::CTSLib.pathForUrn(urn,'edition')
+        Rails.logger.info("Urn = #{urn}")
+        document_path = collection + "/" + CTS::CTSLib.pathForUrn(urn,'edition')
     end
     
     
-    Rails.logger.info("Creating identifiers for #{identifier_class}")
+    Rails.logger.info("Creating identifiers for #{identifier_class} of #{document_path}")
     if (identifier_class == 'CTSIdentifier')
       identifier = document_path
     else
@@ -581,19 +582,7 @@ class PublicationsController < ApplicationController
     if identifier_class == 'HGVIdentifier'
       related_identifiers = NumbersRDF::NumbersHelper.collection_identifier_to_identifiers(identifier)
     elsif identifier_class == 'CTSIdentifier'
-      # if we have a passage, create an identifer for the passage itself and the parent text
-      if (! (passage.nil?) && passage != '')
-        # add the identifier for the full text as well as the passage
-        # which will be in the format namespace/edititionurn
-        text_identifier = identifier.clone.sub!(/^(.*?\/.*?)\/.*$/,'\1')
-        trans_identifier = text_identifier.clone.sub!(/grc/,'eng').sub!(/edition/,'translation')
-        related_identifiers = [text_identifier, trans_identifier, identifier]
-      else
-        # Hack -  pull in translation and CITE identifiers from CTS Inventory
-        trans_identifier = identifier.clone.sub!(/grc/,'eng').sub!(/edition/,'translation')
-        # TODO - add MODS record??
-        related_identifiers = [identifier,trans_identifier]
-      end
+      related_identifiers = [identifier]
     else
       related_identifiers = NumbersRDF::NumbersHelper.identifier_to_identifiers(identifier)
     end

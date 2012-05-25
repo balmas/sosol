@@ -153,22 +153,11 @@ module NumbersRDF
         identifiers_hash = Hash.new
         unless identifiers.nil?
           identifiers.each do |identifier|
-            local_identifier = identifier_to_local_identifier(identifier)
-            components = identifier_to_components(local_identifier)
-            # BMA HACK - need better way of handling CTS namespaces 
-            # for now using NS/textgroup.work/edition|translation/edition.exemplar/passage
-            if (components[0] =~ /perseus.org|greekLang|latinLang/)
-               pub_type = components[2]
-               if (components[0] =~ /epigraphy/)
-                ns_type  = 'epigraphy'
-               else
-                 ns_type = 'texts' 
-               end
-               key = "#{ns_type}_#{pub_type}"
-               if (components[4])
-                key = key + "_passage"
-               end
+            if (CTS::CTSLib.isCTSIdentifier(identifier))
+              key = CTS::CTSLib.getIdentifierKey(identifier)
             else
+              local_identifier = identifier_to_local_identifier(identifier)
+              components = identifier_to_components(local_identifier)
               key = components[1]
             end
               

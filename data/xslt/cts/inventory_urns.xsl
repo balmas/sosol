@@ -4,13 +4,15 @@
     xmlns:cts="http://chs.harvard.edu/xmlns/cts3/ti">
     
     <xsl:output method="text"/>
+    <xsl:param name="e_expression" select="'edition'"/>
+    <xsl:param name="e_work"/>
+    <xsl:param name="e_textgroup"/>
     <xsl:template match="/">
-        <xsl:for-each select="//cts:textgroup">
+        <xsl:for-each select="//cts:textgroup[not($e_textgroup) or @projid=$e_textgroup]">
             <xsl:variable name="group" select="@projid"/>
             <xsl:variable name="groupname" select="cts:groupname[1]"/>
             <xsl:variable name="group_prefix" select="substring-before($group,':')"/>
-            <xsl:message>Group <xsl:value-of select="$group"/></xsl:message>
-            <xsl:for-each select="cts:work">
+            <xsl:for-each select="cts:work[not($e_work) or @projid=$e_work]">
                 <xsl:variable name="work_prefix" select="substring-before(@projid,':')"/>
                 <xsl:variable name="work">    
                     <xsl:choose>
@@ -22,9 +24,12 @@
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>
-                <xsl:for-each select="cts:edition">
+                <xsl:variable name="work_title">
+                	<xsl:value-of select="cts:title[1]"/>
+                </xsl:variable>
+                <xsl:for-each select="cts:edition[$e_expression='edition']|cts:translation[not($e_expression='edition')]">
                     <xsl:variable name="edition_prefix" select="substring-before(@projid,':')"/>
-                    <xsl:variable name="edition_label" select="cts:label"/>
+                    <xsl:variable name="edition_label" select="concat($work_title,',',cts:label)"/>
                     <xsl:variable name="edition">
                         <xsl:choose>
                             <xsl:when test="$edition_prefix = $work_prefix">
@@ -36,7 +41,7 @@
                         </xsl:choose>
                     </xsl:variable>
                     <xsl:variable name="urn" select="translate(concat($group,'.',$work,'.',$edition),',','__')"/>
-                    <xsl:value-of select="concat($edition_label,' (',$urn,')','|','urn:cts:',$urn,',')"/>
+                    <xsl:value-of select="concat($edition_label,' (',$urn,')','|','urn:cts:',$urn,'&#xa;')"/>
                 </xsl:for-each>
             </xsl:for-each>
         </xsl:for-each>

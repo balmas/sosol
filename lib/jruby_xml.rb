@@ -218,6 +218,7 @@ module JRubyXML
       transformer.setErrorListener(TransformErrorListener.new())
       
       parameters.each do |parameter, value|
+        Rails.logger.info("Setting #{parameter.to_s} to #{value}")
         transformer.setParameter(parameter.to_s, value)
       end
       

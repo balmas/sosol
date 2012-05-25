@@ -72,7 +72,7 @@ class Publication < ActiveRecord::Base
 
     #merge xml
     #text << REXML::Document.new tmp[:EpiCTSIdentifier].to_s
-    #text << REXML::Document.new tmp[:PassageCTSIdentifier].to_s
+    #text << REXML::Document.new tmp[:TeiPassageCTSIdentifier].to_s
     
 
     Rails.logger.info('---------------DDB xml document---------------------')
@@ -130,12 +130,15 @@ class Publication < ActiveRecord::Base
       original_was_nil = true;
     end
     self.title = original_title
+    Rails.logger.info("Original title #{original_title}")
 
     # FORK CHANGE - list s/b configurable?
-    SITE_IDENTIFIERS.split(",").each do |identifier_class|
+    SITE_IDENTIFIERS.split(",").each do |identifier_name|
  
-      if identifiers.has_key?(identifier_class::IDENTIFIER_NAMESPACE)
-        identifiers[identifier_class::IDENTIFIER_NAMESPACE].each do |identifier_string|
+      ns = identifier_name.constantize::IDENTIFIER_NAMESPACE
+      if identifiers.has_key?(ns)
+        identifiers[ns].each do |identifier_string|
+          identifier_class = Object.const_get(identifier_name)
           temp_id = identifier_class.new(:name => identifier_string)
           Rails.logger.info("associating identifier #{identifier_string} at #{temp_id.to_path}")
           # make sure we have a path on master before forking it for this publication 
@@ -144,9 +147,10 @@ class Publication < ActiveRecord::Base
             raise temp_id.to_path + " not found on master"
           else
             Rails.logger.info("adding identifier to pub #{temp_id}")
+            temp_title = temp_id.titleize
             self.identifiers << temp_id
-            if self.title == original_title
-              self.title = temp_id.titleize
+            if ( self.title == original_title )
+              self.title = temp_title
             end
           end # if master blank?
         end # do
@@ -1527,31 +1531,15 @@ class Publication < ActiveRecord::Base
       creatable_identifiers = []
     end
     # FORK CHANGE START
-    if !has_epicts
-      creatable_identifiers.delete("EpiTransCTSIdentifier")
+    if has_epicts || has_teicts
+      creatable_identifiers = []
     end
-    if !has_teicts
-      creatable_identifiers.delete("PassageCTSIdentifier")
-      creatable_identifiers.delete("TeiTransCTSIdentifier")
-    end
-    if has_teicts
-      creatable_identifiers.delete("EpiCTSIdentifier") # its either an inscription or a text
-      creatable_identifiers.delete("PassageCTSIdentifier") # no passages from scratch
-    end
-    if has_epicts
-      creatable_identifiers.delete("PassageCTSIdentifier")
-      creatable_identifiers.delete("TeiCTSIdentifier") # its either an inscription or a text   
-    end
-    multi_identifiers = ['EpiTransCTSIdentifier','TeiTransCTSIdentifier']
-    
     # FORK CHANGE END
     
     #only let user create new for non-existing        
     self.identifiers.each do |i|
       creatable_identifiers.each do |ci|
-        # FORK CHANGE START
-        if (ci == i.class.to_s && ! multi_identifiers.grep(i.class.to_s))
-        # FORK CHANGE END
+        if (ci == i.class.to_s)
           creatable_identifiers.delete(ci)    
         end
       end

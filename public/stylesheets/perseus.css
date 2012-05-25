@@ -10,6 +10,16 @@
 	margin-top: 5em;
 }
 
+.create {
+	clear:both;
+	margin: 2em;
+}
+
+#notice_error, #notice_notice {
+	clear:both;
+	margin: 2em;
+}
+
 #cts_selector {
 	clear: both;
 	float: left;
@@ -21,4 +31,8 @@
 .cts_selector_hint {
 	font-size: smaller;
 	font-style: italic;
+}
+
+#create_translation {
+	display:inline;
 }

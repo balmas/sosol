@@ -9,7 +9,7 @@ class Identifier < ActiveRecord::Base
   
   IDENTIFIER_STATUS = %w{ new editing submitted approved finalizing committed archived }
   
-  EDIT_ARTIFACT = false
+  EDIT_ARTIFACT = false  
   
   validates_presence_of :name, :type
   
@@ -159,11 +159,7 @@ class Identifier < ActiveRecord::Base
   #   - title of identifier
   def titleize
     title = nil
-    # FORK CHANGE START 
-    if (self.class.superclass == CTSIdentifier || self.class.superclass.superclass == CTSIdentifier) 
-        title = self.name
-    elsif self.class == HGVMetaIdentifier
-    # FORK CHANGE END
+    if self.class == HGVMetaIdentifier
       title = NumbersRDF::NumbersHelper::identifier_to_title(self.name)
     elsif self.class == HGVTransIdentifier
       title = NumbersRDF::NumbersHelper::identifier_to_title(
@@ -179,9 +175,7 @@ class Identifier < ActiveRecord::Base
           self.class.collection_names_hash[collection_name]
         
         # strip leading zeros
-        unless document_number.nil?
-          document_number.sub!(/^0*/,'')
-        end
+        document_number.sub!(/^0*/,'')
 
         if collection_name.nil?
           title = self.name.split('/').last

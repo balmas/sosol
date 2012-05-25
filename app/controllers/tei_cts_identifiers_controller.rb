@@ -4,7 +4,7 @@ class TeiCtsIdentifiersController < IdentifiersController
   
   ## TODO 
   # we to offer the following options:
-  # 1. select a passage or passage-range to edit -> results in creation of one or more PassageCTSIdentifier obj
+  # 1. select a passage or passage-range to edit -> results in creation of one or more TeiPassageCTSIdentifier obj
   # 2. download/export full XML of outermost tei:text element [ maybe limited to a specific role? ]
   # 3. upload/import full XML of outermost tei:text element [ maybe limited to a specific role? ]
   # 3. edit/update commentary (teiHeader) 
@@ -12,13 +12,13 @@ class TeiCtsIdentifiersController < IdentifiersController
   # 5. add a CITE index 
   # 6. update a CITE index 
   
-  # Ideally PassageCtsIdentifier Interface would offer options to create stand-off markup in the form of
+  # Ideally TeiPassageCTSIdentifier Interface would offer options to create stand-off markup in the form of
   # CITE index entries, for example:
   #    from within a select a range of XML to create an index entry from
   #    e.g. this range is a quotation, this range is a named entity, this range maps to image coordinates X 
   
   # so related identifier types would be:
-  ## PassageCtsIdentifier
+  ## TeiPassageCTSIdentifier
   ## TeiTransCTSIdentifier
   ## CITEIndexIdentifier
   
@@ -31,12 +31,12 @@ class TeiCtsIdentifiersController < IdentifiersController
                                      :action => :show)
   end
   
-  # GET /publications/1/passage_cts_identifiers/1/edit
+  # GET /publications/1/tei_passage_cts_identifiers/1/edit
   def exportxml
     find_identifier
   end
   
-  # PUT /publications/1/passage_cts_identifiers/1/update
+  # PUT /publications/1/tei_passage_cts_identifiers/1/update
   def update
     find_identifier
     @original_commit_comment = ''
@@ -67,7 +67,7 @@ class TeiCtsIdentifiersController < IdentifiersController
   end
    
     
-  # GET /publications/1/passage_cts_identifiers/1/preview
+  # GET /publications/1/tei_passage_cts_identifiers/1/preview
   def preview
     find_identifier
     

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?oxygen RNGSchema="file:/home/balmas/workspace/cts/editors/cts3/TextInventory.rng" type="xml"?>
+<TextInventory xmlns="http://chs.harvard.edu/xmlns/cts3/ti" tiid="epifacs" tiversion="3.0.rc1">
+    <ctsnamespace abbr="epigraphy.perseus.org" ns="perseus.org/ctsns/greekEpi">
+        <description xml:lang="eng">Marie-Claire Beaulieu's Inventory of Epigrams</description>
+    </ctsnamespace>
+    <collection id="epifacs">
+        <title xmlns="http://purl.org/dc/elements/1.1" xml:lang="eng">Marie-Claire's Eipgrams</title>
+        <creator xmlns="http://purl.org/dc/elements/1.1">Marie-Claire Beaulieu</creator>
+        <coverage xmlns="http://purl.org/dc/elements/1.1" xml:lang="">Thebes</coverage>
+        <description xmlns="http://purl.org/dc/elements/1.1" xml:lang="eng">Epigrams Demo</description>
+        <rights xmlns="http://purl.org/dc/elements/1.1" xml:lang="eng">Licensed
+			under the terms of Creative Commons attribution-share-alike
+			license.</rights>
+    </collection>    
+    <citationSchemes>
+        <scheme projid="poeticline" type="logical">
+            <label>line</label>
+            <description xml:lang="eng">Epigram cited by individual lines.</description>
+        </scheme>
+    </citationSchemes>
+    <textgroup projid="epigraphy.perseus.org:igvii">
+        <groupname xml:lang="eng">igvii</groupname>
+        <work projid="epigraphy.perseus.org:2543-2545" xml:lang="grc">
+            <title xml:lang="eng">2543-2545: Epitaph of Nedymos (Thebes)</title>
+            <edition projid="epigraphy.perseus.org:perseus-grc1">
+                <label xml:lang="eng">Greek Transcription</label>
+                <online docname="igvii.2543-2545.perseus-grc1.xml">
+                    <validate schema="http://www.tei-c.org/release/xml/tei/custom/schema/relaxng/teilite.rng"></validate>
+                    <namespaceMapping abbreviation="tei"
+                        nsURI="http://www.tei-c.org/ns/1.0"/>
+                    <citationMapping>
+                        <citation label="epigram"
+                            scope="/tei:TEI/tei:text/tei:body"
+                            xpath="/tei:div[@n = '?']">                        	
+                            <citation label="line"
+                                scope="/tei:TEI/tei:text/tei:body/tei:div[@n = '?']"
+                                xpath="/tei:l[@n = '?']"/></citation>
+                    </citationMapping>
+                </online>      
+                <memberof collection="epifacs"/>
+            </edition>
+            <translation projid="epigraphy.perseus.org:perseus-eng1" xml:lang="en">
+                <label xml:lang="eng">English Translation</label>
+                <online docname="igvii.2543-2545.perseus-eng1.xml">
+                    <validate schema="http://www.tei-c.org/release/xml/tei/custom/schema/relaxng/teilite.rng"></validate>
+                    <namespaceMapping abbreviation="tei"
+                        nsURI="http://www.tei-c.org/ns/1.0"/>
+                    <citationMapping>
+                        <citation label="epigram"
+                            scope="/tei:TEI/tei:text/tei:body"
+                            xpath="/tei:div[@n = '?']"/>                        
+                    </citationMapping>
+                </online>                
+                <memberof collection="epifacs"/>
+            </translation>            
+        </work>
+    </textgroup>
+    <textgroup projid="epigraphy.perseus.org:igxii">
+        <groupname xml:lang="eng">igxii</groupname>
+        <work projid="epigraphy.perseus.org:8_600" xml:lang="grc">
+            <title xml:lang="eng">8,600: epitaph of Demetria (Thasos)</title>
+            <edition projid="epigraphy.perseus.org:perseus-grc1">
+                <label xml:lang="eng">Greek Transcription</label>
+                <online docname="igxii.8_600.perseus-grc1.xml">
+                    <validate schema="http://www.tei-c.org/release/xml/tei/custom/schema/relaxng/teilite.rng"></validate>
+                    <namespaceMapping abbreviation="tei"
+                        nsURI="http://www.tei-c.org/ns/1.0"/>
+                    <citationMapping>
+                        <citation label="epigram"
+                            scope="/tei:TEI/tei:text/tei:body"
+                            xpath="/tei:div[@n = '?']">                        	
+                            <citation label="line"
+                                scope="/tei:TEI/tei:text/tei:body/tei:div[@n = '?']/tei:p"
+                                xpath="/tei:l[@n = '?']">
+                            </citation>
+                          </citation>
+                    </citationMapping>
+                </online>      
+                <memberof collection="epifacs"/>
+            </edition>
+            <translation projid="epigraphy.perseus.org:perseus-eng1" xml:lang="en">
+                <label xml:lang="eng">English Translation</label>
+                <online docname="igxii.8_600.perseus-eng1.xml">
+                    <validate schema="http://www.tei-c.org/release/xml/tei/custom/schema/relaxng/teilite.rng"></validate>
+                    <namespaceMapping abbreviation="tei"
+                        nsURI="http://www.tei-c.org/ns/1.0"/>
+                    <citationMapping>
+                        <citation label="epigram"
+                            scope="/tei:TEI/tei:text/tei:body"
+                            xpath="/tei:div[@type='epigram' and @n = '?']"/>
+                                     
+                    </citationMapping>
+                </online>                
+                <memberof collection="epifacs"/>
+            </translation>            
+        </work>
+    </textgroup>
+</TextInventory>

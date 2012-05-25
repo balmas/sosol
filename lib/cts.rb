@@ -3,13 +3,35 @@ module CTS
   require 'net/http'
   require "uri"
   
+  
+  CTS_JAR_PATH = File.join(File.dirname(__FILE__), *%w"java cts3.jar")  
+  GROOVY_JAR_PATH = File.join(File.dirname(__FILE__), *%w"java groovy-all-1.6.2.jar")  
   CTS_NAMESPACE = "http://chs.harvard.edu/xmlns/cts3/ti"
   EXIST_HELPER_REPO = "#{EXIST_STANDALONE_URL}/exist/rest/db/xq/CTS.xq?"
   EXIST_HELPER_REPO_PUT = "#{EXIST_STANDALONE_URL}/exist/rest"
-  CATALOG_SEARCH = "http://catalog.perseus.tufts.edu/perseus.org/xc/search/"
   
   module CTSLib
     class << self
+      
+      # method which returns a CtsUrn object from the java chs cts3 library
+      def urnObj(a_urn)
+        if(RUBY_PLATFORM == 'java')
+          Rails.logger.info("loading #{CTS_JAR_PATH} and #{GROOVY_JAR_PATH}")
+          require 'java'
+          require CTS_JAR_PATH
+          require GROOVY_JAR_PATH
+          include_class("edu.harvard.chs.cts3.CtsUrn") { |pkg, name| "J" + name }
+          urn = JCtsUrn.new(a_urn)
+          Rails.logger.info("created urn #{urn.getTextGroup(true)} #{urn.getWork(true)}")
+        else
+          require 'rubygems'
+          require 'rjb'
+          Rjb::load(classpath = ".:#{CTS_JAR_PATH}:#{GROOVY_JAR_PATH}", jvmargs=[])
+          cts_urn_class = Rjb::import('edu.harvard.chs.cts3.CtsUrn')
+          urn = cts_urn_class.new(a_urn)
+        end
+        return urn
+      end
       
       # method which inserts the publication type (i.e. edition or translation) into the path of a CTS urn
       def pathForUrn(a_urn,a_pubtype) 
@@ -33,10 +55,33 @@ module CTS
         return document_path_parts.join('/')        
       end
       
+      def workTitleForUrn(a_inventory,a_urn)
+        urn = urnObj(a_urn)
+        response = Net::HTTP.get_response(
+          URI.parse(self.getInventoryUrl(a_inventory) + "&request=GetCapabilities"))
+        results = JRubyXML.apply_xsl_transform(
+          JRubyXML.stream_from_string(response.body),
+          JRubyXML.stream_from_file(File.join(RAILS_ROOT,
+              %w{data xslt cts work_title.xsl})), 
+              :textgroup => urn.getTextGroup(true), :work => urn.getWork(true))
+        return results
+      end
+      
+      def versionTitleForUrn(a_inventory,a_urn)
+        urn = urnObj(a_urn)
+        response = Net::HTTP.get_response(
+          URI.parse(self.getInventoryUrl(a_inventory) + "&request=GetCapabilities"))
+        results = JRubyXML.apply_xsl_transform(
+          JRubyXML.stream_from_string(response.body),
+          JRubyXML.stream_from_file(File.join(RAILS_ROOT,
+              %w{data xslt cts version_title.xsl})), 
+              :textgroup => urn.getTextGroup(true), :work => urn.getWork(true), :version => urn.getVersion(true) )
+        return results
+      end
+      
       def getInventory(a_inventory)
-         Rails.logger.info("Inventory" + self.getInventoriesHash()[a_inventory])
          response = Net::HTTP.get_response(
-            URI.parse(self.getInventoriesHash()[a_inventory] + "&request=GetCapabilities"))
+            URI.parse(self.getInventoryUrl(a_inventory) + "&request=GetCapabilities"))
          results = JRubyXML.apply_xsl_transform(
           JRubyXML.stream_from_string(response.body),
           JRubyXML.stream_from_file(File.join(RAILS_ROOT,
@@ -44,23 +89,60 @@ module CTS
          return results
       end
       
+      def isCTSIdentifier(a_identifier)
+        components = a_identifier.split('/')
+        return getInventoriesHash().has_key?(components[0])
+      end
+      
+      def getInventoryUrl(a_inventory)
+        return EXIST_HELPER_REPO + '&inv=' + a_inventory
+      end
+      
       def getInventoriesHash()
         unless defined? @inventories_hash
           @inventories_hash = Hash.new
-          @inventories_hash = { "perseus" => EXIST_HELPER_REPO + '&inv=perseussosol',
-                                "epifacs" =>  EXIST_HELPER_REPO + '&inv=epi-ti'}
+          SITE_CTS_INVENTORIES.split(',').each do |entry|
+            info = entry.split('|')
+            @inventories_hash[info[0]] = info[1]
+          end
         end
         return @inventories_hash
       end
       
+      def getIdentifierKey(a_identifier)
+          components = a_identifier.split('/')
+          if (@inventories_hash.has_key?(components[0]))
+            pub_type = ''
+            if (components[5])
+              pub_type='Passage'
+            elsif (components[3] == 'translation')
+              pub_type='Trans'  
+            end
+            id_type = @inventories_hash.fetch(components[0]) + pub_type + "CTSIdentifier"
+            return id_type.constantize::IDENTIFIER_NAMESPACE
+          end  
+          return nil
+      end
+       
       def getEditionUrns(a_inventory)
-        Rails.logger.info("Inventory" + self.getInventoriesHash()[a_inventory])
         response = Net::HTTP.get_response(
-          URI.parse(self.getInventoriesHash()[a_inventory] + "&request=GetCapabilities"))
+          URI.parse(self.getInventoryUrl(a_inventory) + "&request=GetCapabilities"))
         results = JRubyXML.apply_xsl_transform(
           JRubyXML.stream_from_string(response.body),
           JRubyXML.stream_from_file(File.join(RAILS_ROOT,
-              %w{data xslt cts inventory_urns.xsl})))
+              %w{data xslt cts inventory_to_json.xsl})))
+        return results
+      end
+      
+      def getTranslationUrns(a_inventory,a_urn)
+        urn = urnObj(a_urn)
+        response = Net::HTTP.get_response(
+          URI.parse(self.getInventoryUrl(a_inventory) + "&request=GetCapabilities"))
+        results = JRubyXML.apply_xsl_transform(
+          JRubyXML.stream_from_string(response.body),
+          JRubyXML.stream_from_file(File.join(RAILS_ROOT,
+              %w{data xslt cts inventory_trans_to_json.xsl})), 
+              :e_textgroup => urn.getTextGroup(true), :e_work => urn.getWork(true), :e_expression => 'translation')
         return results
       end
       
@@ -195,7 +277,7 @@ headers)
         # TODO fix catalog to support full, escaped url
         # for POC just use the work and edition
         searchid = a_identifier.to_urn_components[0] + "." + a_identifier.to_urn_components[1]
-        return CATALOG_SEARCH + searchid
+        return SITE_CATALOG_SEARCH + searchid
       end
       
     end #class

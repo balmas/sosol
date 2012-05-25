@@ -107,8 +107,9 @@ Rails::Initializer.run do |config|
   SITE_FULL_NAME = 'Philologist'
   SITE_TAG_LINE = 'powered by Son of Suda Online'
   SITE_LAYOUT = 'perseus'
-  SITE_IDENTIFIERS = 'PassageCTSIdentifier,TeiCTSIdentifier,TeiTransCTSIdentifier,EpiCTSIdentifier,EpiTransCTSIdentifier'
-  # FORK CHANGE END  
+  SITE_IDENTIFIERS = 'TeiPassageCTSIdentifier,TeiCTSIdentifier,TeiTransCTSIdentifier,EpiCTSIdentifier,EpiTransCTSIdentifier'
+  SITE_CTS_INVENTORIES = 'perseus|Tei,epifacs|Epi'
+  SITE_CATALOG_SEARCH = "http://catalog.perseus.tufts.edu/perseus.org/xc/search/"
   
   REPOSITORY_ROOT = File.join(RAILS_ROOT, 'db', 'git')
   #REPOSITORY_ROOT = '/usr/local/gitrepos'

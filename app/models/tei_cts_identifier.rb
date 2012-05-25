@@ -18,17 +18,7 @@ class TeiCTSIdentifier < CTSIdentifier
       JRubyXML.stream_from_string(content),
       JRubyXML.stream_from_file(File.join(RAILS_ROOT,
         %w{data xslt cts validate_teia.xsl})))
-  end
-  
-  def reprinted_in
-    return REXML::XPath.first(REXML::Document.new(self.xml_content),
-      "/TEI/text/body/head/ref[@type='reprint-in']/@n")
-  end
-  
-  def is_reprinted?
-    return reprinted_in.nil? ? false : true
-  end
-  
+  end  
   
   def update_commentary(line_id, reference, comment_content = '', original_item_id = '', delete_comment = false)
     rewritten_xml =
