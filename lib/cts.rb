@@ -109,7 +109,24 @@ module CTS
         return @inventories_hash
       end
       
+      def getIdentifierClassName(a_identifier)
+          getInventoriesHash()
+          components = a_identifier.split('/')
+          if (@inventories_hash.has_key?(components[0]))
+            pub_type = ''
+            if (components[5])
+              pub_type='Passage'
+            elsif (components[3] == 'translation')
+              pub_type='Trans'  
+            end
+            id_type = @inventories_hash.fetch(components[0]) + pub_type + "CTSIdentifier"
+            return id_type
+          end  
+          return nil
+      end
+      
       def getIdentifierKey(a_identifier)
+          getInventoriesHash()
           components = a_identifier.split('/')
           if (@inventories_hash.has_key?(components[0]))
             pub_type = ''

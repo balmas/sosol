@@ -57,6 +57,7 @@
         select_element.insert("<option value=''>click to select...</option>");
       } 
       select_element.disabled = false;
+      select_element.show();
     }
   }
   
@@ -92,9 +93,18 @@
     var inventory = $F('CTSIdentifierCollectionSelect');
     var textgroup = $F('group_urn');
     var work = $F('work_urn').replace(textgroup+".",'');
-    var editions = inventories[inventory][textgroup].works[work].editions
-    populate_selector($('edition_urn'),editions)
-    $('emend_button').disabled = false;
+    if (work) {
+      var editions = inventories[inventory][textgroup].works[work].editions
+      
+      if (editions) {
+        populate_selector($('edition_urn'),editions)
+        $('emend_button').disabled = false;
+      } else {
+        // still need to empty it out
+        populate_selector($('edition_urn'),{})
+        $('emend_button').disabled = true;
+      }
+    }
 
   }
   
@@ -112,11 +122,8 @@
       = select_tag("#{identifier_class}CollectionSelect", options_for_select(identifier_class.inventories_hash.keys), :onchange => "get_inventory();$('emend_button').disabled='';if(this.options[0].value==''){this.remove(0)}")
     = select_tag 'group_urn', nil, :disabled => true, :style => 'min-width: 5em;', :onchange => "update_work_urns();"
     = select_tag 'work_urn', nil, :disabled => true, :style => 'min-width: 5em;', :onchange => "update_edition_urns();"
+    = submit_tag "Create Edition", :disabled => true, :id => 'create_button'
     = select_tag 'edition_urn', nil, :disabled => true, :style => 'min-width: 5em;', :onchange => "if(this.options[0].value==''){this.remove(0)};"
     //= text_field_tag('passage')
-    -if emend == :showemend
-      = submit_tag "Emend", :disabled => true, :id => 'emend_button'
-      = submit_tag "Create Edition", :disabled => true, :id => 'create_button'
-    -else
-      = submit_tag "Emend", :disabled => true, :id => 'emend_button', :style => 'display:none'
-      = submit_tag "Create Edition", :disabled => true, :id => 'create_button', :style => 'display:none'
+    = submit_tag "Emend", :disabled => true, :id => 'emend_button'
+    

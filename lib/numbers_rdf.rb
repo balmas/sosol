@@ -153,19 +153,16 @@ module NumbersRDF
         identifiers_hash = Hash.new
         unless identifiers.nil?
           identifiers.each do |identifier|
-            if (CTS::CTSLib.isCTSIdentifier(identifier))
-              key = CTS::CTSLib.getIdentifierKey(identifier)
-            else
-              local_identifier = identifier_to_local_identifier(identifier)
-              components = identifier_to_components(local_identifier)
-              key = components[1]
-            end
+            
+            local_identifier = identifier_to_local_identifier(identifier)
+            components = identifier_to_components(local_identifier)
+            key = components[1]
               
             identifiers_hash[key] = 
               Array.new() unless identifiers_hash.has_key?(key)
             identifiers_hash[key] << identifier
-          end
-        end
+          end # end do
+        end # end unless
         return identifiers_hash
       end
       

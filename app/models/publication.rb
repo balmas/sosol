@@ -117,9 +117,12 @@ class Publication < ActiveRecord::Base
       identifiers = NumbersRDF::NumbersHelper.identifier_to_identifiers(identifiers)
     end
 
-    #identifiers is now an array ofstrings like:  papyri.info/ddbdp/bgu;7;1504
-    identifiers = NumbersRDF::NumbersHelper.identifiers_to_hash(identifiers)
-    #identifiers is now a hash with IDENTIFIER_NAMESPACE (hgv, tm, ddbdp etc)  as the keys and the string papyri.info/ddbdp/bgu;7;1504 as the value
+    if identifiers.class == Array
+      #identifiers is now an array ofstrings like:  papyri.info/ddbdp/bgu;7;1504
+      identifiers = NumbersRDF::NumbersHelper.identifiers_to_hash(identifiers)
+    end
+    # identifiers is now (or was always) a hash with IDENTIFIER_NAMESPACE (hgv, tm, ddbdp etc)  
+    # as the keys and the string papyri.info/ddbdp/bgu;7;1504 as the value
 
 
     #title is first identifier in list

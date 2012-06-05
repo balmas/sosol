@@ -8,6 +8,19 @@ class EpiCtsIdentifiersController < IdentifiersController
     redirect_to :action =>"editxml",:publication=>params[:publication],:id=>params[:id]
   end
   
+  def create_from_selector
+    publication = Publication.find(params[:publication_id])
+    edition = params[:edition_urn]
+    collection = params[:CTSIdentifierCollectionSelect]
+    
+    @identifier = EpiCTSIdentifier.new_from_template(publication,collection,edition,'edition',nil)
+    
+    flash[:notice] = "File created."
+    expire_publication_cache
+    redirect_to polymorphic_path([@identifier.publication, @identifier],
+                                 :action => :edit) and return
+  end
+  
    def link_translation
     find_identifier
     render(:template => 'epi_trans_cts_identifiers/create',:locals => {:edition => @identifier.urn_attribute,:collection => @identifier.inventory,:controller => 'epi_trans_cts_identifiers',:publication_id => @identifier.publication.id, :emend => :showemend})

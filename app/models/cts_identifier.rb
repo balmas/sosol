@@ -8,7 +8,7 @@ class CTSIdentifier < Identifier
   IDENTIFIER_NAMESPACE = ''
   NAMESPACE_DOMAIN = '.perseus.org'
   TEMPORARY_COLLECTION = 'TempTexts'
-  TEMPORARY_TITLE = 'New Text'
+  TEMPORARY_TITLE = 'New Transcription'
   
   def titleize
     title = nil
@@ -40,6 +40,8 @@ class CTSIdentifier < Identifier
     Rails.logger.info("adding identifier to pub #{temp_id}")
     temp_id.publication = publication 
     temp_id.save!
+    initial_content = temp_id.file_template
+    temp_id.set_content(initial_content, :comment => 'Created from SoSOL template')
     return temp_id
   end
   
@@ -52,9 +54,15 @@ class CTSIdentifier < Identifier
       raise temp_id.to_path + " not found on master"
     end
     Rails.logger.info("adding identifier to pub #{temp_id}")
-    temp_id.publication = publication 
-    temp_id.save!
-    return temp_id
+    # make sure we're not already editing this
+    exists = self.find_by_name(document_path)
+    if (exists.nil?)
+      temp_id.publication = publication 
+      temp_id.save!
+      return temp_id
+    else
+      raise "#{temp_id.name} is already in your edit list."
+    end
   end
 
   def self.inventories_hash

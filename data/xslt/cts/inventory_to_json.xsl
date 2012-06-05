@@ -81,25 +81,28 @@
       
         <!-- add label field -->
         <xsl:text>label:'</xsl:text><xsl:value-of select="$label"/><xsl:text>',</xsl:text>
-        <xsl:text>urn:'</xsl:text><xsl:value-of select="$urn"/><xsl:text>',</xsl:text>
+        <xsl:text>urn:'</xsl:text><xsl:value-of select="$urn"/><xsl:text>'</xsl:text>
         
+        <xsl:if test="cts:edition">
         <!-- add editions field -->
-        <xsl:text>'editions': {</xsl:text>
-        
-        <!-- iterate through editions -->
-        <xsl:apply-templates select="cts:edition"/>
-        
-        <!-- end editions field -->
-        <xsl:text>},</xsl:text>
-        
+	        <xsl:text>,'editions': {</xsl:text>
+	        
+	        <!-- iterate through editions -->
+	        <xsl:apply-templates select="cts:edition"/>
+	        
+	        <!-- end editions field -->
+	        <xsl:text>}</xsl:text>
+        </xsl:if>
         <!-- add translations field -->
-        <xsl:text>'translations': {</xsl:text>
-        
-        <!-- iterate through translations -->
-        <xsl:apply-templates select="cts:translation"/>
-        
-        <!-- end translations field -->
-        <xsl:text>}</xsl:text>
+        <xsl:if test="cts:translation">
+	        <xsl:text>,'translations': {</xsl:text>
+	        
+	        <!-- iterate through translations -->
+	        <xsl:apply-templates select="cts:translation"/>
+	        
+	        <!-- end translations field -->
+	        <xsl:text>}</xsl:text>
+        </xsl:if>
         
         <!-- end work obj -->
         <xsl:text>}</xsl:text>

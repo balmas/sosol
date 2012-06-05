@@ -13,13 +13,26 @@ class EpiTransCtsIdentifiersController < IdentifiersController
   def create_from_selector
     publication = Publication.find(params[:publication_id])
     edition = params[:edition_urn]
+    # if no edition, just use a fake one for use in path processing
+    
     collection = params[:CTSIdentifierCollectionSelect]
     
     if (params[:commit] == "Create Translation")
       lang = params[:create_lang]
+      # if the inventory doesn't have any edition for the translation then it's a new edition
+      # whose urn will be in the CTSIdentifierEditionSelect param
+      if (edition.nil?)
+        edition = params[:CTSIdentifierEditionSelect]
+      end
       @identifier =  EpiTransCTSIdentifier.new_from_template(publication,collection,edition,'translation',lang)
     else
+      begin
         @identifier = EpiTransCTSIdentifier.new_from_inventory(publication,collection,edition,'translation')
+      rescue Exception => e
+        flash[:notice] = e.to_s
+        redirect_to dashboard_url
+        return
+      end
     end
     flash[:notice] = "File created."
     expire_publication_cache

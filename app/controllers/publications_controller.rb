@@ -537,6 +537,7 @@ class PublicationsController < ApplicationController
     passage = params[:passage]
     
     if (identifier_class == 'CTSIdentifier') 
+        redirect_to :controller => params[:current_controller_name], :action => params[:current_action_name], :id => @identifier.id, :publication_id => params[:pub_id]
         if (urn.blank?)
           flash[:error] = 'Error creating publication: you must specify an edition urn'
           redirect_to dashboard_url

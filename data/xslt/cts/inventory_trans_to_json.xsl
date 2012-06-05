@@ -13,7 +13,7 @@
     <xsl:template match="/">
         <!--start inventory obj -->
         <xsl:text>{ editions: [</xsl:text>
-        <xsl:for-each select="//cts:textgroup[@projid=$e_textgroup]">
+        <xsl:for-each select="//cts:textgroup">
             <xsl:apply-templates/>
         </xsl:for-each>
         <!-- end inventory obj -->
@@ -21,12 +21,17 @@
     </xsl:template>
     
     <xsl:template match="cts:textgroup">
-        <xsl:apply-templates select="cts:work[@projid=$e_work]"/>
+    	<xsl:if test="@projid=$e_textgroup">
+        	<xsl:apply-templates select="cts:work"/>
+        </xsl:if>
     </xsl:template>
     
     <xsl:template match="cts:work">
-        <xsl:apply-templates select="cts:translation"/>
+    	<xsl:if test="@projid=$e_work">
+        	<xsl:apply-templates select="cts:translation"/>
+        </xsl:if>
     </xsl:template>
+    
     <xsl:template match="cts:translation">
         <xsl:variable name="edition_prefix" select="substring-before(@projid,':')"/>
         <xsl:variable name="group" select="parent::cts:work/parent::cts:textgroup/@projid"/>
