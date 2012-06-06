@@ -8,6 +8,7 @@
       == #{SITE_NAME} Prototype: #{controller.controller_name} - #{controller.action_name}
     = stylesheet_link_tag 'editor'
     = stylesheet_link_tag SITE_LAYOUT
+    = stylesheet_link_tag 'master_additions'
     - if controller.controller_name == 'hgv_meta_identifiers' and controller.action_name == 'edit'
       = stylesheet_link_tag 'edit_mask'
       = stylesheet_link_tag 'meta'
@@ -38,6 +39,11 @@
       #cts_selector 
         = render(:partial => 'publications/cts_selector', :locals => { :emend => :showemend, :hide_text => :hide_text, :controller => 'cts_publications' })
     = render :partial => "common/flash_all"
+    .nav
+      %ul{ :class => 'nav right'} 
+        = render "cross_site/board_tabs"
+        = render "cross_site/user_tabs"
+     
     .content_body
       = yield
       

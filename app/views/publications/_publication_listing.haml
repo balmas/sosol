@@ -7,15 +7,14 @@
   - list_id = "publication_list_holder"
   
 - newstyle = 'style="color:blue; background-color:red"'
+- colwidth = 60/Identifier.site_identifier_classes.size
 
 %div{:class => "publication_list_holder", :id => list_id }
   %table{:class=>"results", :width=>"95%"}
     %tr
       %td
-      %td{:width=>"15%"}
-      %td{:width=>"15%"}
-      %td{:width=>"15%"}
-      %td{:width=>"15%"}
+      - Identifier.site_identifier_classes.each do |i|
+        %td{:width=>"#{colwidth}%"}
     %tr{:class=>"head"}
       %td
         = Publication

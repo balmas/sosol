@@ -8,6 +8,13 @@ class EpiCtsIdentifiersController < IdentifiersController
     redirect_to :action =>"editxml",:publication=>params[:publication],:id=>params[:id]
   end
   
+  def editxml
+    find_identifier
+    @identifier[:xml_content] = @identifier.xml_content
+    @is_editor_view = true
+    render :template => 'epi_cts_identifiers/editxml'
+  end
+  
   def create_from_selector
     publication = Publication.find(params[:publication_id])
     edition = params[:edition_urn]

@@ -10,6 +10,13 @@ class EpiTransCtsIdentifiersController < IdentifiersController
     @identifier[:text_html_preview] = @identifier.related_text.preview
   end
   
+  def editxml
+    find_identifier
+    @identifier[:xml_content] = @identifier.xml_content
+    @is_editor_view = true
+    render :template => 'epi_trans_cts_identifiers/editxml'
+  end
+  
   def create_from_selector
     publication = Publication.find(params[:publication_id])
     edition = params[:edition_urn]

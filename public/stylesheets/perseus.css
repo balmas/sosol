@@ -36,3 +36,7 @@
 #create_translation {
 	display:inline;
 }
+
+.content_body {
+	clear:both;
+}
